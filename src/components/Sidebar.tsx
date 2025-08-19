@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { THEME_COLORS } from '@/lib/theme-colors';
+import { t } from '@/lib/i18n';
 
 interface SidebarProps {
   className?: string;
@@ -29,37 +30,37 @@ interface NavItem {
   badge?: number;
 }
 
-const navItems: NavItem[] = [
+const getNavItems = (): NavItem[] => [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    label: t('sidebar.nav.dashboard'),
     icon: LayoutDashboard,
     href: '/'
   },
   {
     id: 'snippets',
-    label: 'Mis Snippets',
+    label: t('sidebar.nav.snippets'),
     icon: Code2,
     href: '/snippets',
     badge: 12
   },
   {
     id: 'notes',
-    label: 'Mis Notas',
+    label: t('sidebar.nav.notes'),
     icon: StickyNote,
     href: '/notes',
     badge: 8
   },
   {
     id: 'productivity',
-    label: 'Productividad',
+    label: t('sidebar.nav.productivity'),
     icon: CheckSquare,
     href: '/productivity',
     badge: 3
   },
   {
     id: 'resources',
-    label: 'Recursos',
+    label: t('sidebar.nav.resources'),
     icon: BookOpen,
     href: '/resources'
   }
@@ -68,6 +69,8 @@ const navItems: NavItem[] = [
 export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState('dashboard');
+  
+  const navItems = getNavItems();
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -103,9 +106,9 @@ export function Sidebar({ className }: SidebarProps) {
               </div>
               <div>
                 <h1 className={`${THEME_COLORS.logo.title} font-semibold text-lg leading-none`}>
-                  DevToolkit
+                  {t('app.name')}
                 </h1>
-                <p className={`${THEME_COLORS.logo.subtitle} text-xs`}>PRO</p>
+                <p className={`${THEME_COLORS.logo.subtitle} text-xs`}>{t('app.subtitle')}</p>
               </div>
             </motion.div>
           )}
@@ -145,10 +148,10 @@ export function Sidebar({ className }: SidebarProps) {
                 className="flex-1 min-w-0"
               >
                 <p className={`${THEME_COLORS.sidebar.user.userName} font-medium text-sm truncate`}>
-                  John Developer
+                  {t('sidebar.user.name')}
                 </p>
                 <p className={`${THEME_COLORS.sidebar.user.userEmail} text-xs truncate`}>
-                  john@example.com
+                  {t('sidebar.user.email')}
                 </p>
               </motion.div>
             )}
@@ -168,7 +171,7 @@ export function Sidebar({ className }: SidebarProps) {
               className="mb-4"
             >
               <h2 className={`${THEME_COLORS.sidebar.nav.sectionTitle} text-xs font-semibold uppercase tracking-wider mb-2`}>
-                HERRAMIENTAS
+                {t('sidebar.nav.sectionTitle')}
               </h2>
             </motion.div>
           )}
@@ -237,9 +240,9 @@ export function Sidebar({ className }: SidebarProps) {
               transition={{ duration: 0.2 }}
               className={`text-xs ${THEME_COLORS.sidebar.footer.text} text-center`}
             >
-              DevToolkit v1.0.0
+              {t('app.name')} {t('app.version')}
               <br />
-              <span className={THEME_COLORS.sidebar.footer.accent}>Premium Edition</span>
+              <span className={THEME_COLORS.sidebar.footer.accent}>{t('app.edition')}</span>
             </motion.div>
           ) : (
             <motion.div

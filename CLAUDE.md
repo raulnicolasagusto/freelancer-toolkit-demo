@@ -123,6 +123,110 @@ Para cambiar colores/temas:
 
 **IMPORTANTE:** Siempre usar las constantes de `THEME_COLORS` en lugar de hardcodear colores en componentes.
 
+## Sistema de Internacionalización (i18n)
+
+### Archivo Principal de i18n
+**Ubicación:** `src/lib/i18n/index.ts`
+
+### Idiomas Soportados
+El sistema soporta 9 idiomas completamente traducidos:
+
+- **🇪🇸 Español (es)** - Idioma base/por defecto
+- **🇺🇸 English (en)** - Inglés
+- **🇵🇹 Português (pt)** - Portugués  
+- **🇮🇹 Italiano (it)** - Italiano
+- **🇫🇷 Français (fr)** - Francés
+- **🇩🇪 Deutsch (de)** - Alemán
+- **🇷🇺 Русский (ru)** - Ruso
+- **🇯🇵 日本語 (ja)** - Japonés
+- **🇸🇦 العربية (ar)** - Árabe (con soporte RTL)
+
+### Estructura de Archivos
+```
+src/lib/i18n/
+├── index.ts              # Helper functions y configuración
+└── locales/
+    ├── es.ts            # Español (base)
+    ├── en.ts            # English
+    ├── pt.ts            # Português
+    ├── it.ts            # Italiano
+    ├── fr.ts            # Français
+    ├── de.ts            # Deutsch
+    ├── ru.ts            # Русский
+    ├── ja.ts            # 日本語
+    └── ar.ts            # العربية (RTL)
+```
+
+### Uso en Componentes
+
+#### Importar función de traducción:
+```typescript
+import { t } from '@/lib/i18n';
+```
+
+#### Usar traducciones:
+```typescript
+// Texto simple
+{t('sidebar.nav.dashboard')}
+
+// Con variables/reemplazos
+{t('dashboard.recentActivity.timeAgo.hoursAgo', { hours: '2' })}
+```
+
+#### Navegación anidada:
+Las traducciones usan dot notation para acceder a objetos anidados:
+- `t('app.name')` → 'DevToolkit'
+- `t('sidebar.nav.snippets')` → 'Mis Snippets'
+- `t('dashboard.header.title')` → 'Bienvenido de vuelta'
+
+### Funciones Principales
+
+- `t(key, replacements?)` - Obtener texto traducido
+- `setLocale(locale)` - Cambiar idioma
+- `getCurrentLocale()` - Obtener idioma actual
+- `getSupportedLocales()` - Lista de idiomas disponibles
+- `initializeI18n()` - Inicializar con detección automática
+
+### Características Especiales
+
+#### Soporte RTL
+- El idioma árabe tiene soporte automático RTL
+- Cambia `dir="rtl"` en el HTML automáticamente
+- Diseño adaptativo para idiomas de derecha a izquierda
+
+#### Detección Automática
+- Detecta idioma del navegador automáticamente
+- Fallback a español si el idioma no está soportado
+- Guarda preferencia en localStorage
+
+#### Variables en Textos
+Soporta reemplazo de variables con sintaxis `{variable}`:
+```typescript
+// En el archivo de idioma:
+"hoursAgo": "hace {hours} horas"
+
+// En el componente:
+t('time.hoursAgo', { hours: '2' }) // → "hace 2 horas"
+```
+
+### Componentes Actualizados
+Los siguientes componentes ya usan el sistema i18n:
+- `src/components/Sidebar.tsx` - Navegación, usuario, footer
+- `src/app/page.tsx` - Dashboard completo
+- `src/app/layout.tsx` - Layout principal
+
+### Cambio de Idiomas
+Para cambiar idiomas (implementación futura):
+1. Crear selector de idiomas en UI
+2. Llamar `saveLocalePreference(locale)`
+3. El cambio es inmediato y se guarda automáticamente
+
+**IMPORTANTE:** 
+- Siempre usar `t()` para textos visibles al usuario
+- NUNCA hardcodear strings de UI en componentes
+- Las traducciones están completas para todos los idiomas
+- El sistema detecta automáticamente el idioma del usuario
+
 ### Documentos importantes
 
 - para aplicar componentes de shadcn o cambios y mas , hay reglas en el archivo que esta en .claude/ule-next-shadcn-coding-standards.md
