@@ -1,103 +1,195 @@
-import Image from "next/image";
+import { Code2, StickyNote, CheckSquare, BookOpen, TrendingUp, Clock } from 'lucide-react';
+import { THEME_COLORS } from '@/lib/theme-colors';
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h1 className={`text-3xl lg:text-4xl font-bold ${THEME_COLORS.dashboard.title}`}>
+            Bienvenido de vuelta
+          </h1>
+          <p className={`${THEME_COLORS.dashboard.subtitle} mt-2`}>
+            Aquí tienes un resumen de tu actividad y herramientas disponibles
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className={`mt-4 lg:mt-0 text-sm ${THEME_COLORS.dashboard.metadata}`}>
+          Última actividad: hace 2 horas
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className={`${THEME_COLORS.dashboard.card.background} rounded-xl border ${THEME_COLORS.dashboard.card.border} p-6 ${THEME_COLORS.dashboard.card.shadow} ${THEME_COLORS.transitions.shadow}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`${THEME_COLORS.dashboard.stats.label} text-sm font-medium`}>
+                Snippets Guardados
+              </p>
+              <p className={`text-2xl font-bold ${THEME_COLORS.dashboard.stats.value} mt-1`}>
+                12
+              </p>
+            </div>
+            <div className={`${THEME_COLORS.icons.iconBackgrounds.blue} p-3 rounded-lg`}>
+              <Code2 className={`h-6 w-6 ${THEME_COLORS.icons.snippets}`} />
+            </div>
+          </div>
+          <div className="flex items-center mt-4 text-sm">
+            <TrendingUp className={`h-4 w-4 ${THEME_COLORS.icons.trending} mr-1`} />
+            <span className={`${THEME_COLORS.dashboard.stats.trend.positive} font-medium`}>+3</span>
+            <span className={`${THEME_COLORS.dashboard.stats.trend.neutral} ml-1`}>esta semana</span>
+          </div>
+        </div>
+
+        <div className={`${THEME_COLORS.dashboard.card.background} rounded-xl border ${THEME_COLORS.dashboard.card.border} p-6 ${THEME_COLORS.dashboard.card.shadow} ${THEME_COLORS.transitions.shadow}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`${THEME_COLORS.dashboard.stats.label} text-sm font-medium`}>
+                Notas Activas
+              </p>
+              <p className={`text-2xl font-bold ${THEME_COLORS.dashboard.stats.value} mt-1`}>
+                8
+              </p>
+            </div>
+            <div className={`${THEME_COLORS.icons.iconBackgrounds.yellow} p-3 rounded-lg`}>
+              <StickyNote className={`h-6 w-6 ${THEME_COLORS.icons.notes}`} />
+            </div>
+          </div>
+          <div className="flex items-center mt-4 text-sm">
+            <Clock className={`h-4 w-4 ${THEME_COLORS.icons.clock} mr-1`} />
+            <span className={THEME_COLORS.dashboard.stats.trend.neutral}>Última: hace 1h</span>
+          </div>
+        </div>
+
+        <div className={`${THEME_COLORS.dashboard.card.background} rounded-xl border ${THEME_COLORS.dashboard.card.border} p-6 ${THEME_COLORS.dashboard.card.shadow} ${THEME_COLORS.transitions.shadow}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`${THEME_COLORS.dashboard.stats.label} text-sm font-medium`}>
+                Tareas Pendientes
+              </p>
+              <p className={`text-2xl font-bold ${THEME_COLORS.dashboard.stats.value} mt-1`}>
+                3
+              </p>
+            </div>
+            <div className={`${THEME_COLORS.icons.iconBackgrounds.green} p-3 rounded-lg`}>
+              <CheckSquare className={`h-6 w-6 ${THEME_COLORS.icons.productivity}`} />
+            </div>
+          </div>
+          <div className="flex items-center mt-4 text-sm">
+            <span className={THEME_COLORS.dashboard.stats.trend.neutral}>2 completadas hoy</span>
+          </div>
+        </div>
+
+        <div className={`${THEME_COLORS.dashboard.card.background} rounded-xl border ${THEME_COLORS.dashboard.card.border} p-6 ${THEME_COLORS.dashboard.card.shadow} ${THEME_COLORS.transitions.shadow}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`${THEME_COLORS.dashboard.stats.label} text-sm font-medium`}>
+                Recursos Guardados
+              </p>
+              <p className={`text-2xl font-bold ${THEME_COLORS.dashboard.stats.value} mt-1`}>
+                24
+              </p>
+            </div>
+            <div className={`${THEME_COLORS.icons.iconBackgrounds.purple} p-3 rounded-lg`}>
+              <BookOpen className={`h-6 w-6 ${THEME_COLORS.icons.resources}`} />
+            </div>
+          </div>
+          <div className="flex items-center mt-4 text-sm">
+            <span className={THEME_COLORS.dashboard.stats.trend.neutral}>5 categorías</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className={`${THEME_COLORS.dashboard.card.background} rounded-xl border ${THEME_COLORS.dashboard.card.border} p-6`}>
+        <h2 className={`text-xl font-semibold ${THEME_COLORS.dashboard.title} mb-4`}>
+          Acciones Rápidas
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button className={`p-4 text-left rounded-lg border ${THEME_COLORS.buttons.quickAction.border} ${THEME_COLORS.buttons.quickAction.background} ${THEME_COLORS.transitions.default} group`}>
+            <Code2 className={`h-8 w-8 ${THEME_COLORS.icons.snippets} mb-2 ${THEME_COLORS.buttons.quickAction.iconHover} ${THEME_COLORS.transitions.transform}`} />
+            <h3 className={`font-medium ${THEME_COLORS.buttons.quickAction.title}`}>Nuevo Snippet</h3>
+            <p className={`text-sm ${THEME_COLORS.buttons.quickAction.description} mt-1`}>
+              Guarda tu código favorito
+            </p>
+          </button>
+          
+          <button className={`p-4 text-left rounded-lg border ${THEME_COLORS.buttons.quickAction.border} ${THEME_COLORS.buttons.quickAction.background} ${THEME_COLORS.transitions.default} group`}>
+            <StickyNote className={`h-8 w-8 ${THEME_COLORS.icons.notes} mb-2 ${THEME_COLORS.buttons.quickAction.iconHover} ${THEME_COLORS.transitions.transform}`} />
+            <h3 className={`font-medium ${THEME_COLORS.buttons.quickAction.title}`}>Nueva Nota</h3>
+            <p className={`text-sm ${THEME_COLORS.buttons.quickAction.description} mt-1`}>
+              Anota ideas importantes
+            </p>
+          </button>
+          
+          <button className={`p-4 text-left rounded-lg border ${THEME_COLORS.buttons.quickAction.border} ${THEME_COLORS.buttons.quickAction.background} ${THEME_COLORS.transitions.default} group`}>
+            <CheckSquare className={`h-8 w-8 ${THEME_COLORS.icons.productivity} mb-2 ${THEME_COLORS.buttons.quickAction.iconHover} ${THEME_COLORS.transitions.transform}`} />
+            <h3 className={`font-medium ${THEME_COLORS.buttons.quickAction.title}`}>Nueva Tarea</h3>
+            <p className={`text-sm ${THEME_COLORS.buttons.quickAction.description} mt-1`}>
+              Organiza tu trabajo
+            </p>
+          </button>
+          
+          <button className={`p-4 text-left rounded-lg border ${THEME_COLORS.buttons.quickAction.border} ${THEME_COLORS.buttons.quickAction.background} ${THEME_COLORS.transitions.default} group`}>
+            <BookOpen className={`h-8 w-8 ${THEME_COLORS.icons.resources} mb-2 ${THEME_COLORS.buttons.quickAction.iconHover} ${THEME_COLORS.transitions.transform}`} />
+            <h3 className={`font-medium ${THEME_COLORS.buttons.quickAction.title}`}>Explorar Recursos</h3>
+            <p className={`text-sm ${THEME_COLORS.buttons.quickAction.description} mt-1`}>
+              Encuentra herramientas útiles
+            </p>
+          </button>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className={`${THEME_COLORS.dashboard.card.background} rounded-xl border ${THEME_COLORS.dashboard.card.border} p-6`}>
+        <h2 className={`text-xl font-semibold ${THEME_COLORS.dashboard.title} mb-4`}>
+          Actividad Reciente
+        </h2>
+        <div className="space-y-3">
+          <div className={`flex items-center gap-3 p-3 rounded-lg border ${THEME_COLORS.activity.item.border}`}>
+            <div className={`${THEME_COLORS.icons.iconBackgrounds.blue} p-2 rounded-lg`}>
+              <Code2 className={`h-4 w-4 ${THEME_COLORS.icons.snippets}`} />
+            </div>
+            <div className="flex-1">
+              <p className={`text-sm font-medium ${THEME_COLORS.activity.item.title}`}>
+                Guardaste un nuevo snippet de React
+              </p>
+              <p className={`text-xs ${THEME_COLORS.activity.item.timestamp}`}>
+                hace 2 horas
+              </p>
+            </div>
+          </div>
+          
+          <div className={`flex items-center gap-3 p-3 rounded-lg border ${THEME_COLORS.activity.item.border}`}>
+            <div className={`${THEME_COLORS.icons.iconBackgrounds.green} p-2 rounded-lg`}>
+              <CheckSquare className={`h-4 w-4 ${THEME_COLORS.icons.productivity}`} />
+            </div>
+            <div className="flex-1">
+              <p className={`text-sm font-medium ${THEME_COLORS.activity.item.title}`}>
+                Completaste 2 tareas del proyecto
+              </p>
+              <p className={`text-xs ${THEME_COLORS.activity.item.timestamp}`}>
+                hace 4 horas
+              </p>
+            </div>
+          </div>
+          
+          <div className={`flex items-center gap-3 p-3 rounded-lg border ${THEME_COLORS.activity.item.border}`}>
+            <div className={`${THEME_COLORS.icons.iconBackgrounds.yellow} p-2 rounded-lg`}>
+              <StickyNote className={`h-4 w-4 ${THEME_COLORS.icons.notes}`} />
+            </div>
+            <div className="flex-1">
+              <p className={`text-sm font-medium ${THEME_COLORS.activity.item.title}`}>
+                Creaste una nota sobre Next.js 15
+              </p>
+              <p className={`text-xs ${THEME_COLORS.activity.item.timestamp}`}>
+                ayer
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
