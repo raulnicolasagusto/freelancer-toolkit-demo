@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/Sidebar";
 import { THEME_COLORS } from "@/lib/theme-colors";
+import { ClerkProvider } from '@clerk/nextjs';
+import { ConditionalLayout } from "@/components/ConditionalLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,19 +26,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased ${THEME_COLORS.main.bodyBackground} ${THEME_COLORS.main.bodyBackgroundDark}`}
-      >
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <main className={`flex-1 overflow-auto ${THEME_COLORS.main.background} ${THEME_COLORS.main.backgroundDark}`}>
-            <div className="p-6 lg:p-8">
-              {children}
-            </div>
-          </main>
-        </div>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="es">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased ${THEME_COLORS.main.bodyBackground} ${THEME_COLORS.main.bodyBackgroundDark}`}
+        >
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

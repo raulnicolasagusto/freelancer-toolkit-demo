@@ -227,6 +227,85 @@ Para cambiar idiomas (implementación futura):
 - Las traducciones están completas para todos los idiomas
 - El sistema detecta automáticamente el idioma del usuario
 
+## Sistema de Autenticación (Clerk)
+
+### Configuración
+**Proveedor:** Clerk - Autenticación completa y gestión de usuarios
+**Archivos principales:**
+- Variables de entorno en `.env` (NEVER commit to repo)
+- Middleware en `src/middleware.ts`
+- Páginas de auth en `src/app/(auth)/`
+
+### Características Implementadas
+
+#### Páginas de Autenticación
+- **Sign In** (`/sign-in`) - Inicio de sesión con estilos personalizados
+- **Sign Up** (`/sign-up`) - Registro con verificación por email obligatoria
+- **Verificación por Email** - Código de verificación integrado
+- **Estilos Premium** - Totalmente integrados con nuestro sistema de colores
+
+#### Protección de Rutas
+- **Middleware automático** - Protege todas las rutas excepto auth
+- **Redirección automática** - No autenticados van a `/sign-in`
+- **Layout condicional** - Sidebar solo para usuarios autenticados
+
+#### Integración con Sidebar
+- **Datos reales del usuario** - Nombre, email, avatar de Clerk
+- **Avatar dinámico** - Imagen del usuario o iniciales automáticas
+- **Logout integrado** - Botón de cerrar sesión con hover/collapsed states
+- **Loading states** - Manejo de estados de carga
+
+### Componentes Principales
+
+#### `src/components/ConditionalLayout.tsx`
+- Muestra sidebar solo a usuarios autenticados
+- Loading state mientras verifica autenticación
+- Redirección automática
+
+#### `src/components/Sidebar.tsx` 
+- Integrado con `useUser()` de Clerk
+- Muestra datos reales: nombre, email, avatar
+- Botones de logout con animaciones
+
+#### `src/middleware.ts`
+- Protege automáticamente todas las rutas
+- Rutas públicas: `/sign-in`, `/sign-up`, `/api/webhook/*`
+
+### Configuración de Clerk Dashboard
+
+#### Configuraciones Requeridas:
+1. **Email Verification** - ACTIVADO (email verification code)
+2. **Sign-up/Sign-in URLs:**
+   - Sign-in URL: `/sign-in`
+   - Sign-up URL: `/sign-up`
+   - After sign-in: `/`
+   - After sign-up: `/`
+
+#### Variables de Entorno Requeridas:
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+```
+
+### Flujo de Usuario
+
+1. **Usuario no autenticado** → Redirigido a `/sign-in`
+2. **Nuevo usuario** → `/sign-up` → Verificación email → Dashboard
+3. **Usuario existente** → `/sign-in` → Dashboard
+4. **Usuario autenticado** → Dashboard con sidebar + datos reales
+5. **Logout** → Redirigido a `/sign-in`
+
+### Próximas Mejoras
+- Personalización completa de páginas de auth
+- Integración con base de datos de usuarios
+- Roles y permisos
+- Social logins adicionales
+
+**IMPORTANTE:**
+- NUNCA commitear el archivo `.env` al repositorio
+- Usar `.env.example` como template
+- Verificar que Clerk esté configurado en dashboard antes de testing
+
 ### Documentos importantes
 
 - para aplicar componentes de shadcn o cambios y mas , hay reglas en el archivo que esta en .claude/ule-next-shadcn-coding-standards.md
