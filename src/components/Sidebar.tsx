@@ -11,7 +11,6 @@ import {
   BookOpen, 
   ChevronLeft,
   ChevronRight,
-  Menu,
   LayoutDashboard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -19,6 +18,8 @@ import { THEME_COLORS } from '@/lib/theme-colors';
 import { t } from '@/lib/i18n';
 import { useUser, SignOutButton } from '@clerk/nextjs';
 import { LogOut } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface SidebarProps {
   className?: string;
@@ -70,13 +71,19 @@ const getNavItems = (): NavItem[] => [
 
 export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeItem, setActiveItem] = useState('dashboard');
   const { user, isLoaded } = useUser();
+  const pathname = usePathname();
   
   const navItems = getNavItems();
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
+  };
+
+  // Determinar item activo basado en la ruta actual
+  const getActiveItem = () => {
+    const item = navItems.find(nav => nav.href === pathname);
+    return item?.id || 'dashboard';
   };
 
   // Memoizar los datos del usuario para evitar recalculaciones
@@ -228,7 +235,7 @@ export function Sidebar({ className }: SidebarProps) {
 
         {navItems.map((item, index) => {
           const Icon = item.icon;
-          const isActive = activeItem === item.id;
+          const isActive = getActiveItem() === item.id;
           
           return (
             <motion.div
@@ -237,15 +244,15 @@ export function Sidebar({ className }: SidebarProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.05 }}
             >
-              <Button
-                variant="ghost"
-                onClick={() => setActiveItem(item.id)}
-                className={cn(
-                  `w-full justify-start h-11 px-3 ${THEME_COLORS.sidebar.nav.item.text} ${THEME_COLORS.sidebar.nav.item.textHover} ${THEME_COLORS.sidebar.nav.item.background} ${THEME_COLORS.transitions.all}`,
-                  isActive && `${THEME_COLORS.sidebar.nav.item.active.background} ${THEME_COLORS.sidebar.nav.item.active.text} ${THEME_COLORS.sidebar.nav.item.active.textHover} border-r-2 ${THEME_COLORS.sidebar.nav.item.active.border}`,
-                  isCollapsed && "justify-center px-0"
-                )}
-              >
+              <Link href={item.href} className="block w-full">
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    `w-full justify-start h-11 px-3 ${THEME_COLORS.sidebar.nav.item.text} ${THEME_COLORS.sidebar.nav.item.textHover} ${THEME_COLORS.sidebar.nav.item.background} ${THEME_COLORS.transitions.all}`,
+                    isActive && `${THEME_COLORS.sidebar.nav.item.active.background} ${THEME_COLORS.sidebar.nav.item.active.text} ${THEME_COLORS.sidebar.nav.item.active.textHover} border-r-2 ${THEME_COLORS.sidebar.nav.item.active.border}`,
+                    isCollapsed && "justify-center px-0"
+                  )}
+                >
                 <Icon className={cn(
                   "h-5 w-5 flex-shrink-0",
                   isActive && THEME_COLORS.sidebar.nav.item.active.icon
@@ -272,7 +279,8 @@ export function Sidebar({ className }: SidebarProps) {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </Button>
+                </Button>
+              </Link>
             </motion.div>
           );
         })}

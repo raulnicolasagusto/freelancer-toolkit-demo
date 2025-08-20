@@ -155,6 +155,61 @@ export const THEME_COLORS = {
     }
   },
 
+  // === SNIPPETS PAGE ===
+  snippets: {
+    // Terminal header
+    terminal: {
+      background: 'bg-slate-800',
+      titleText: 'text-slate-400',
+      dots: {
+        red: 'bg-red-500',
+        yellow: 'bg-yellow-500',
+        green: 'bg-green-500'
+      }
+    },
+    
+    // Code area
+    code: {
+      background: 'bg-slate-900',
+      text: 'text-slate-300',
+      lineNumbers: 'text-slate-500',
+      moreLine: 'text-slate-400',
+      gradient: 'bg-gradient-to-t from-slate-900 to-transparent'
+    },
+    
+    // Action buttons
+    actions: {
+      edit: {
+        background: 'bg-blue-500/10',
+        border: 'border-blue-500/20',
+        text: 'text-blue-400',
+        textHover: 'hover:text-blue-300',
+        backgroundHover: 'hover:bg-blue-500/20'
+      },
+      delete: {
+        background: 'bg-red-500/10',
+        border: 'border-red-500/20',
+        text: 'text-red-400',
+        textHover: 'hover:text-red-300',
+        backgroundHover: 'hover:bg-red-500/20'
+      }
+    },
+    
+    // Language colors
+    languages: {
+      react: 'text-blue-400',
+      javascript: 'text-yellow-400',
+      python: 'text-green-400',
+      css: 'text-pink-400',
+      typescript: 'text-blue-300',
+      sql: 'text-orange-400',
+      vue: 'text-green-500',
+      yaml: 'text-purple-400',
+      go: 'text-cyan-400',
+      default: 'text-slate-400'
+    }
+  },
+
   // === TRANSITIONS ===
   transitions: {
     default: 'transition-colors',

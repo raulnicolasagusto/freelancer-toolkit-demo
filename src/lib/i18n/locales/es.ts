@@ -104,6 +104,17 @@ export const es = {
   numbers: {
     categories: "categorías",
     completed: "completadas"
+  },
+
+  // === SNIPPETS PAGE ===
+  snippets: {
+    pageTitle: "Mis Snippets",
+    addButton: "Agregar Snippet",
+    emptyState: "No tienes snippets guardados aún",
+    actions: {
+      edit: "Editar snippet",
+      delete: "Eliminar snippet"
+    }
   }
 } as const;
 

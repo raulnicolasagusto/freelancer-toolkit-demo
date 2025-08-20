@@ -130,7 +130,7 @@ export function t(key: string, replacements?: Record<string, string | number>): 
   
   // Navegar por la estructura anidada usando dot notation
   const keys = key.split('.');
-  let value: any = translations;
+  let value: unknown = translations;
   
   for (const k of keys) {
     if (value && typeof value === 'object' && k in value) {
@@ -220,7 +220,7 @@ export function saveLocalePreference(locale: SupportedLocale): void {
 }
 
 // Exportar por defecto para uso fácil
-export default {
+const i18nUtils = {
   t,
   setLocale,
   getCurrentLocale,
@@ -230,3 +230,5 @@ export default {
   initializeI18n,
   saveLocalePreference
 };
+
+export default i18nUtils;
