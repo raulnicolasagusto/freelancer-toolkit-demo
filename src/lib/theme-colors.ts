@@ -155,6 +155,61 @@ export const THEME_COLORS = {
     }
   },
 
+  // === TOP BAR NAVIGATION ===
+  topBar: {
+    // Background y estructura
+    background: 'bg-white dark:bg-slate-800',
+    border: 'border-b border-slate-200 dark:border-slate-700',
+    
+    // Breadcrumbs
+    breadcrumbs: {
+      container: 'flex items-center space-x-2',
+      item: {
+        text: 'text-slate-600 dark:text-slate-400',
+        textHover: 'hover:text-slate-900 dark:hover:text-white',
+        active: 'text-slate-900 dark:text-white font-medium'
+      },
+      separator: 'text-slate-400 dark:text-slate-500',
+      icon: 'text-slate-500 dark:text-slate-400'
+    },
+    
+    // Search bar
+    search: {
+      container: 'relative',
+      input: {
+        background: 'bg-slate-50 dark:bg-slate-700',
+        border: 'border-slate-200 dark:border-slate-600',
+        borderFocus: 'focus:border-blue-500 focus:ring-blue-500/20',
+        text: 'text-slate-900 dark:text-white',
+        placeholder: 'placeholder-slate-500 dark:placeholder-slate-400'
+      },
+      icon: 'text-slate-400 dark:text-slate-500',
+      results: {
+        background: 'bg-white dark:bg-slate-800',
+        border: 'border-slate-200 dark:border-slate-700',
+        shadow: 'shadow-lg',
+        item: {
+          background: 'hover:bg-slate-50 dark:hover:bg-slate-700',
+          text: 'text-slate-900 dark:text-white',
+          description: 'text-slate-600 dark:text-slate-400'
+        }
+      }
+    },
+    
+    // Action buttons
+    actions: {
+      button: {
+        background: 'hover:bg-slate-50 dark:hover:bg-slate-700',
+        text: 'text-slate-600 dark:text-slate-400',
+        textHover: 'hover:text-slate-900 dark:hover:text-white'
+      },
+      notification: {
+        badge: 'bg-red-500',
+        badgeText: 'text-white'
+      }
+    }
+  },
+
   // === SNIPPETS PAGE ===
   snippets: {
     // Terminal header

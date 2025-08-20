@@ -115,6 +115,23 @@ export const es = {
       edit: "Editar snippet",
       delete: "Eliminar snippet"
     }
+  },
+
+  // === TOP BAR NAVIGATION ===
+  topBar: {
+    search: {
+      placeholder: "Buscar aquí...",
+      noResults: "No se encontraron resultados",
+      searching: "Buscando..."
+    },
+    breadcrumbs: {
+      home: "Inicio"
+    },
+    actions: {
+      notifications: "Notificaciones",
+      settings: "Configuración", 
+      profile: "Perfil de usuario"
+    }
   }
 } as const;
 
