@@ -15,9 +15,11 @@ interface Tab {
 
 interface SnippetEditorProps {
   onTitleChange: (title: string) => void;
+  onTabsChange: (tabs: Tab[]) => void;
+  onObservationsChange: (observations: string) => void;
 }
 
-export default function SnippetEditor({ onTitleChange }: SnippetEditorProps) {
+export default function SnippetEditor({ onTitleChange, onTabsChange, onObservationsChange }: SnippetEditorProps) {
   const [tabs, setTabs] = useState<Tab[]>([
     {
       id: '1',
@@ -59,7 +61,14 @@ export { saludar, obtenerDatos };`
     if (tabs.length > 0) {
       onTitleChange(`Snippet Collection - ${tabs.length} archivo${tabs.length !== 1 ? 's' : ''}`);
     }
-  }, [tabs.length, onTitleChange]);
+    // Pass tabs to parent
+    onTabsChange(tabs);
+  }, [tabs, onTitleChange, onTabsChange]);
+
+  useEffect(() => {
+    // Pass observations to parent
+    onObservationsChange(observations);
+  }, [observations, onObservationsChange]);
 
   const addTab = () => {
     const newTab: Tab = {

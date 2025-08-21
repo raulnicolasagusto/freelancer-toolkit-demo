@@ -4,6 +4,7 @@ import "./globals.css";
 import { THEME_COLORS } from "@/lib/theme-colors";
 import { ClerkProvider } from '@clerk/nextjs';
 import { ConditionalLayout } from "@/components/ConditionalLayout";
+import UserSync from "@/components/UserSync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased ${THEME_COLORS.main.bodyBackground} ${THEME_COLORS.main.bodyBackgroundDark}`}
         >
+          <UserSync />
           <ConditionalLayout>{children}</ConditionalLayout>
         </body>
       </html>

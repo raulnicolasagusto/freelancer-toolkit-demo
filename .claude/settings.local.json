@@ -4,7 +4,8 @@
       "Bash(npm run lint)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "mcp__supabase-local__execute_sql"
     ],
     "deny": [],
     "ask": []

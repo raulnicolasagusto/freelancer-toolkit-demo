@@ -6,9 +6,13 @@ import { THEME_COLORS } from '@/lib/theme-colors';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
 import MarkdownEditor from '@/components/snippets/MarkdownEditor';
 import SnippetEditor from '@/components/snippets/SnippetEditor';
+import FolderSelector from '@/components/snippets/FolderSelector';
+import { createSnippet } from '@/lib/snippets';
 import { motion } from 'framer-motion';
+import { useAuth } from '@clerk/nextjs';
 
 export default function CreateContent() {
+  const { userId } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const type = searchParams.get('type') as 'markdown' | 'snippet' | null;
@@ -16,6 +20,11 @@ export default function CreateContent() {
   const [title, setTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showFolderSelector, setShowFolderSelector] = useState(false);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [content, setContent] = useState('');
+  const [tabs, setTabs] = useState<any[]>([]);
+  const [observations, setObservations] = useState('');
 
   useEffect(() => {
     if (!type || !['markdown', 'snippet'].includes(type)) {
@@ -24,8 +33,50 @@ export default function CreateContent() {
   }, [type, router]);
 
   const handleSave = () => {
-    // TODO: Implementar guardado
-    console.log('Saving...', { type, title });
+    if (!title.trim()) {
+      alert('Por favor ingresa un título');
+      return;
+    }
+    setShowFolderSelector(true);
+  };
+
+  const handleFolderSelect = async (folderId: string | null) => {
+    if (!userId) {
+      console.error('No user ID available');
+      alert('Error de autenticación. Intenta nuevamente.');
+      return;
+    }
+
+    try {
+      const snippetData = {
+        title: title.trim(),
+        type: type as 'snippet' | 'markdown',
+        folder_id: folderId,
+        ...(type === 'markdown' ? {
+          code: content,
+          language: 'markdown',
+          description: 'Documento Markdown'
+        } : {
+          code: tabs.length > 0 ? tabs[0].code : '',
+          language: tabs.length > 0 ? tabs[0].language : 'javascript',
+          description: observations || 'Colección de snippets',
+          observations,
+          tabs: tabs
+        })
+      };
+
+      console.log('Saving snippet:', snippetData);
+      
+      const savedSnippet = await createSnippet(snippetData, userId);
+      
+      if (savedSnippet) {
+        console.log('Snippet saved successfully:', savedSnippet);
+        router.push('/snippets');
+      }
+    } catch (error) {
+      console.error('Error saving snippet:', error);
+      alert('Error al guardar. Intenta nuevamente.');
+    }
   };
 
   const handleBack = () => {
@@ -145,13 +196,25 @@ export default function CreateContent() {
           <MarkdownEditor 
             showPreview={showPreview}
             onTitleChange={setTitle}
+            onContentChange={setContent}
           />
         ) : (
           <SnippetEditor 
             onTitleChange={setTitle}
+            onTabsChange={setTabs}
+            onObservationsChange={setObservations}
           />
         )}
       </div>
+
+      {/* Folder Selector Modal */}
+      <FolderSelector
+        isOpen={showFolderSelector}
+        onClose={() => setShowFolderSelector(false)}
+        onSelect={handleFolderSelect}
+        type="snippets"
+        title={title || `Nuevo ${type}`}
+      />
     </motion.div>
   );
 }

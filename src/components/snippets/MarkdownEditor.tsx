@@ -8,9 +8,10 @@ import ReactMarkdown from 'react-markdown';
 interface MarkdownEditorProps {
   showPreview: boolean;
   onTitleChange: (title: string) => void;
+  onContentChange: (content: string) => void;
 }
 
-export default function MarkdownEditor({ showPreview, onTitleChange }: MarkdownEditorProps) {
+export default function MarkdownEditor({ showPreview, onTitleChange, onContentChange }: MarkdownEditorProps) {
   const [content, setContent] = useState(`# Bienvenido a tu Markdown
 
 ## Características principales
@@ -57,7 +58,9 @@ console.log(saludar('Usuario'));
         onTitleChange(extractedTitle);
       }
     }
-  }, [content, onTitleChange]);
+    // Pass content to parent
+    onContentChange(content);
+  }, [content, onTitleChange, onContentChange]);
 
   return (
     <div className={`h-full ${THEME_COLORS.main.background} ${THEME_COLORS.main.backgroundDark}`}>

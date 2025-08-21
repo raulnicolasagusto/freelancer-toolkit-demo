@@ -18,6 +18,7 @@ import { THEME_COLORS } from '@/lib/theme-colors';
 import { t } from '@/lib/i18n';
 import { useUser, SignOutButton } from '@clerk/nextjs';
 import { LogOut } from 'lucide-react';
+import FolderNavigation from './FolderNavigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -284,6 +285,34 @@ export function Sidebar({ className }: SidebarProps) {
             </motion.div>
           );
         })}
+
+        {/* Folder Navigation for Snippets */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+          className="mt-4"
+        >
+          <FolderNavigation 
+            type="snippets" 
+            isCollapsed={isCollapsed}
+            basePath="/snippets"
+          />
+        </motion.div>
+
+        {/* Folder Navigation for Notes */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.5 }}
+          className="mt-4"
+        >
+          <FolderNavigation 
+            type="notes" 
+            isCollapsed={isCollapsed}
+            basePath="/notes"
+          />
+        </motion.div>
       </nav>
 
       {/* Footer */}

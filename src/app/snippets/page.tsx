@@ -2,9 +2,12 @@
 
 import { t } from '@/lib/i18n';
 import { THEME_COLORS } from '@/lib/theme-colors';
-import { Plus, Trash2, Edit3 } from 'lucide-react';
-import { useState } from 'react';
+import { Plus, Trash2, Edit3, Folder, Home } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import CreateModal from '@/components/snippets/CreateModal';
+import { getSnippets, getFolders, type Snippet, type Folder } from '@/lib/snippets';
+import { useAuth, useUser } from '@clerk/nextjs';
 
 // Datos de ejemplo para los snippets
 const EXAMPLE_SNIPPETS = [
@@ -195,14 +198,64 @@ function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
 }
 
 export default function SnippetsPage() {
+  const { userId } = useAuth();
+  const { user } = useUser();
+  const searchParams = useSearchParams();
+  const currentFolderId = searchParams.get('folder');
+  
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [snippets, setSnippets] = useState<Snippet[]>([]);
+  const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleEdit = (id: number) => {
+  useEffect(() => {
+    loadSnippets();
+    if (currentFolderId) {
+      loadCurrentFolder();
+    }
+  }, [currentFolderId, userId]);
+
+  const loadSnippets = async () => {
+    if (!userId) {
+      setSnippets([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const userEmail = user?.primaryEmailAddress?.emailAddress || '';
+      const snippetsData = await getSnippets(currentFolderId, userId, userEmail);
+      setSnippets(snippetsData);
+    } catch (error) {
+      console.error('Error loading snippets:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadCurrentFolder = async () => {
+    if (!currentFolderId || !userId) {
+      setCurrentFolder(null);
+      return;
+    }
+    
+    try {
+      const userEmail = user?.primaryEmailAddress?.emailAddress || '';
+      const folders = await getFolders('snippets', userId, userEmail);
+      const folder = folders.find(f => f.id === currentFolderId);
+      setCurrentFolder(folder || null);
+    } catch (error) {
+      console.error('Error loading folder:', error);
+    }
+  };
+
+  const handleEdit = (id: string) => {
     console.log('Edit snippet:', id);
     // TODO: Implementar funcionalidad de editar
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     console.log('Delete snippet:', id);
     // TODO: Implementar funcionalidad de eliminar
   };
@@ -216,9 +269,33 @@ export default function SnippetsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className={`text-3xl font-bold ${THEME_COLORS.dashboard.title}`}>
-            {t('snippets.pageTitle')}
-          </h1>
+          <div className="flex items-center space-x-4">
+            {currentFolder ? (
+              <div className="flex items-center space-x-2">
+                <div 
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: currentFolder.color + '20' }}
+                >
+                  <Folder size={18} style={{ color: currentFolder.color }} />
+                </div>
+                <div>
+                  <h1 className={`text-3xl font-bold ${THEME_COLORS.dashboard.title}`}>
+                    {currentFolder.name}
+                  </h1>
+                  <p className={`text-sm ${THEME_COLORS.dashboard.subtitle}`}>
+                    Carpeta de {t('snippets.pageTitle')}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Home size={24} className={THEME_COLORS.icons.snippets} />
+                <h1 className={`text-3xl font-bold ${THEME_COLORS.dashboard.title}`}>
+                  {t('snippets.pageTitle')}
+                </h1>
+              </div>
+            )}
+          </div>
           
           <button
             onClick={handleAddSnippet}
@@ -237,17 +314,88 @@ export default function SnippetsPage() {
           </button>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className={`
+                ${THEME_COLORS.dashboard.card.background} 
+                ${THEME_COLORS.dashboard.card.border}
+                border rounded-xl h-48 animate-pulse
+              `}>
+                <div className="p-3 bg-slate-700 flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div className="w-3 h-3 bg-slate-600 rounded-full"></div>
+                    <div className="w-3 h-3 bg-slate-600 rounded-full"></div>
+                    <div className="w-3 h-3 bg-slate-600 rounded-full"></div>
+                  </div>
+                  <div className="h-3 bg-slate-600 rounded flex-1"></div>
+                </div>
+                <div className="p-4">
+                  <div className="space-y-2">
+                    <div className="h-3 bg-slate-600 rounded w-3/4"></div>
+                    <div className="h-3 bg-slate-600 rounded w-1/2"></div>
+                    <div className="h-3 bg-slate-600 rounded w-2/3"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && snippets.length === 0 && (
+          <div className="text-center py-12">
+            <div className={`${THEME_COLORS.icons.iconBackgrounds.blue} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4`}>
+              {currentFolder ? (
+                <Folder size={32} style={{ color: currentFolder.color }} />
+              ) : (
+                <Home size={32} className={THEME_COLORS.icons.snippets} />
+              )}
+            </div>
+            <h3 className={`text-lg font-semibold ${THEME_COLORS.dashboard.title} mb-2`}>
+              {currentFolder ? `No hay snippets en ${currentFolder.name}` : 'No hay snippets'}
+            </h3>
+            <p className={`${THEME_COLORS.dashboard.subtitle} mb-4`}>
+              Crea tu primer {currentFolder ? 'snippet en esta carpeta' : 'snippet'} para comenzar.
+            </p>
+            <button
+              onClick={handleAddSnippet}
+              className={`
+                inline-flex items-center space-x-2 px-4 py-2
+                ${THEME_COLORS.sidebar.nav.item.active.background}
+                ${THEME_COLORS.sidebar.nav.item.active.text}
+                border ${THEME_COLORS.sidebar.nav.item.active.border}
+                rounded-lg font-medium
+                hover:${THEME_COLORS.sidebar.nav.item.active.textHover}
+                ${THEME_COLORS.transitions.all}
+              `}
+            >
+              <Plus size={18} />
+              <span>Crear Snippet</span>
+            </button>
+          </div>
+        )}
+
         {/* Snippets Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {EXAMPLE_SNIPPETS.map((snippet) => (
-            <SnippetCard
-              key={snippet.id}
-              snippet={snippet}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
+        {!loading && snippets.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {snippets.map((snippet) => (
+              <SnippetCard
+                key={snippet.id}
+                snippet={{
+                  id: parseInt(snippet.id.slice(-4)), // Usar últimos 4 caracteres como ID numérico temporal
+                  title: snippet.title,
+                  language: snippet.language,
+                  code: snippet.code,
+                  createdAt: new Date(snippet.created_at).toLocaleDateString()
+                }}
+                onEdit={() => handleEdit(snippet.id)}
+                onDelete={() => handleDelete(snippet.id)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Create Modal */}
