@@ -4,6 +4,7 @@ import { t } from '@/lib/i18n';
 import { THEME_COLORS } from '@/lib/theme-colors';
 import { Plus, Trash2, Edit3 } from 'lucide-react';
 import { useState } from 'react';
+import CreateModal from '@/components/snippets/CreateModal';
 
 // Datos de ejemplo para los snippets
 const EXAMPLE_SNIPPETS = [
@@ -194,6 +195,8 @@ function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
 }
 
 export default function SnippetsPage() {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
   const handleEdit = (id: number) => {
     console.log('Edit snippet:', id);
     // TODO: Implementar funcionalidad de editar
@@ -205,8 +208,7 @@ export default function SnippetsPage() {
   };
 
   const handleAddSnippet = () => {
-    console.log('Add new snippet');
-    // TODO: Implementar funcionalidad de agregar snippet
+    setShowCreateModal(true);
   };
 
   return (
@@ -247,6 +249,12 @@ export default function SnippetsPage() {
           ))}
         </div>
       </div>
+
+      {/* Create Modal */}
+      <CreateModal 
+        isOpen={showCreateModal} 
+        onClose={() => setShowCreateModal(false)} 
+      />
     </div>
   );
 }

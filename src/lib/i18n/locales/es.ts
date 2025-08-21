@@ -109,7 +109,7 @@ export const es = {
   // === SNIPPETS PAGE ===
   snippets: {
     pageTitle: "Mis Snippets",
-    addButton: "Agregar Snippet",
+    addButton: "Agregar",
     emptyState: "No tienes snippets guardados aún",
     actions: {
       edit: "Editar snippet",
