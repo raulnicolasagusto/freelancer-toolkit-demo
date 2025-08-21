@@ -94,9 +94,15 @@ const getLanguageColor = (language: string) => {
 };
 
 interface SnippetCardProps {
-  snippet: typeof EXAMPLE_SNIPPETS[0];
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+  snippet: {
+    id: string;
+    title: string;
+    language: string;
+    code: string;
+    createdAt: string;
+  };
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
@@ -119,6 +125,7 @@ function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => onEdit(snippet.id)}
     >
       {/* Terminal header */}
       <div className={`${THEME_COLORS.snippets.terminal.background} p-3 flex items-center justify-between`}>
@@ -251,8 +258,8 @@ export default function SnippetsPage() {
   };
 
   const handleEdit = (id: string) => {
-    console.log('Edit snippet:', id);
-    // TODO: Implementar funcionalidad de editar
+    // Navegar a la página de crear/editar con el ID del snippet
+    window.location.href = `/snippets/create?edit=${id}`;
   };
 
   const handleDelete = (id: string) => {
@@ -384,7 +391,7 @@ export default function SnippetsPage() {
               <SnippetCard
                 key={snippet.id}
                 snippet={{
-                  id: parseInt(snippet.id.slice(-4)), // Usar últimos 4 caracteres como ID numérico temporal
+                  id: snippet.id,
                   title: snippet.title,
                   language: snippet.language,
                   code: snippet.code,

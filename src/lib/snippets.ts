@@ -232,6 +232,37 @@ export async function getSnippets(folderId?: string | null, clerkUserId?: string
   }
 }
 
+export async function getSnippetById(snippetId: string, clerkUserId?: string, userEmail?: string): Promise<Snippet | null> {
+  try {
+    if (!clerkUserId) {
+      console.error('No clerk user ID provided');
+      return null;
+    }
+
+    console.log('Loading snippet by ID:', snippetId, 'for user:', clerkUserId);
+    const supabase = createClient();
+    const userData = await getUserData(clerkUserId, userEmail);
+
+    const { data, error } = await supabase
+      .from('snippets')
+      .select('*')
+      .eq('id', snippetId)
+      .eq('user_id', userData.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching snippet:', error);
+      return null;
+    }
+
+    console.log('Snippet loaded:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in getSnippetById:', error);
+    return null;
+  }
+}
+
 export async function createSnippet(snippetData: {
   title: string;
   type: 'snippet' | 'markdown';

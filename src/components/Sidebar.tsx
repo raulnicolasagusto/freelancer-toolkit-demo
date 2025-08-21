@@ -11,7 +11,9 @@ import {
   BookOpen, 
   ChevronLeft,
   ChevronRight,
-  LayoutDashboard
+  LayoutDashboard,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { THEME_COLORS } from '@/lib/theme-colors';
@@ -72,6 +74,8 @@ const getNavItems = (): NavItem[] => [
 
 export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [expandedSnippets, setExpandedSnippets] = useState(false);
+  const [expandedNotes, setExpandedNotes] = useState(false);
   const { user, isLoaded } = useUser();
   const pathname = usePathname();
   
@@ -237,6 +241,8 @@ export function Sidebar({ className }: SidebarProps) {
         {navItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = getActiveItem() === item.id;
+          const isSnippets = item.id === 'snippets';
+          const isNotes = item.id === 'notes';
           
           return (
             <motion.div
@@ -245,74 +251,108 @@ export function Sidebar({ className }: SidebarProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.05 }}
             >
-              <Link href={item.href} className="block w-full">
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    `w-full justify-start h-11 px-3 ${THEME_COLORS.sidebar.nav.item.text} ${THEME_COLORS.sidebar.nav.item.textHover} ${THEME_COLORS.sidebar.nav.item.background} ${THEME_COLORS.transitions.all}`,
-                    isActive && `${THEME_COLORS.sidebar.nav.item.active.background} ${THEME_COLORS.sidebar.nav.item.active.text} ${THEME_COLORS.sidebar.nav.item.active.textHover} border-r-2 ${THEME_COLORS.sidebar.nav.item.active.border}`,
-                    isCollapsed && "justify-center px-0"
-                  )}
-                >
-                <Icon className={cn(
-                  "h-5 w-5 flex-shrink-0",
-                  isActive && THEME_COLORS.sidebar.nav.item.active.icon
-                )} />
+              {/* Item principal */}
+              <div className="relative">
+                <Link href={item.href} className="block w-full">
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      `w-full justify-start h-11 px-3 ${THEME_COLORS.sidebar.nav.item.text} ${THEME_COLORS.sidebar.nav.item.textHover} ${THEME_COLORS.sidebar.nav.item.background} ${THEME_COLORS.transitions.all}`,
+                      isActive && `${THEME_COLORS.sidebar.nav.item.active.background} ${THEME_COLORS.sidebar.nav.item.active.text} ${THEME_COLORS.sidebar.nav.item.active.textHover} border-r-2 ${THEME_COLORS.sidebar.nav.item.active.border}`,
+                      isCollapsed && "justify-center px-0"
+                    )}
+                  >
+                  <Icon className={cn(
+                    "h-5 w-5 flex-shrink-0",
+                    isActive && THEME_COLORS.sidebar.nav.item.active.icon
+                  )} />
+                  
+                  <AnimatePresence mode="wait">
+                    {!isCollapsed && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-center justify-between flex-1 ml-3"
+                      >
+                        <span className="font-medium">{item.label}</span>
+                        <div className="flex items-center space-x-2">
+                          {item.badge && (
+                            <span className={cn(
+                              `${THEME_COLORS.sidebar.nav.badge.background} ${THEME_COLORS.sidebar.nav.badge.text} text-xs px-2 py-0.5 rounded-full`,
+                              isActive && `${THEME_COLORS.sidebar.nav.badge.active.background} ${THEME_COLORS.sidebar.nav.badge.active.text}`
+                            )}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  </Button>
+                </Link>
                 
-                <AnimatePresence mode="wait">
-                  {!isCollapsed && (
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex items-center justify-between flex-1 ml-3"
-                    >
-                      <span className="font-medium">{item.label}</span>
-                      {item.badge && (
-                        <span className={cn(
-                          `${THEME_COLORS.sidebar.nav.badge.background} ${THEME_COLORS.sidebar.nav.badge.text} text-xs px-2 py-0.5 rounded-full`,
-                          isActive && `${THEME_COLORS.sidebar.nav.badge.active.background} ${THEME_COLORS.sidebar.nav.badge.active.text}`
-                        )}>
-                          {item.badge}
-                        </span>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                </Button>
-              </Link>
+                {/* Botón de expansión para snippets y notes */}
+                {(isSnippets || isNotes) && !isCollapsed && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (isSnippets) {
+                        setExpandedSnippets(!expandedSnippets);
+                      } else {
+                        setExpandedNotes(!expandedNotes);
+                      }
+                    }}
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded hover:bg-white/10 ${THEME_COLORS.transitions.all}`}
+                  >
+                    {(isSnippets ? expandedSnippets : expandedNotes) ? (
+                      <ChevronUp size={14} />
+                    ) : (
+                      <ChevronDown size={14} />
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* Carpetas para snippets */}
+              {isSnippets && !isCollapsed && expandedSnippets && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="ml-4 mt-2"
+                >
+                  <FolderNavigation 
+                    type="snippets" 
+                    isCollapsed={false}
+                    basePath="/snippets"
+                  />
+                </motion.div>
+              )}
+
+              {/* Carpetas para notes */}
+              {isNotes && !isCollapsed && expandedNotes && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="ml-4 mt-2"
+                >
+                  <FolderNavigation 
+                    type="notes" 
+                    isCollapsed={false}
+                    basePath="/notes"
+                  />
+                </motion.div>
+              )}
             </motion.div>
           );
         })}
 
-        {/* Folder Navigation for Snippets */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          className="mt-4"
-        >
-          <FolderNavigation 
-            type="snippets" 
-            isCollapsed={isCollapsed}
-            basePath="/snippets"
-          />
-        </motion.div>
-
-        {/* Folder Navigation for Notes */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.5 }}
-          className="mt-4"
-        >
-          <FolderNavigation 
-            type="notes" 
-            isCollapsed={isCollapsed}
-            basePath="/notes"
-          />
-        </motion.div>
       </nav>
 
       {/* Footer */}

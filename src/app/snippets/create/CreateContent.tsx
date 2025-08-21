@@ -7,15 +7,17 @@ import { ArrowLeft, Save, Eye } from 'lucide-react';
 import MarkdownEditor from '@/components/snippets/MarkdownEditor';
 import SnippetEditor from '@/components/snippets/SnippetEditor';
 import FolderSelector from '@/components/snippets/FolderSelector';
-import { createSnippet } from '@/lib/snippets';
+import { createSnippet, getSnippetById, updateSnippet } from '@/lib/snippets';
 import { motion } from 'framer-motion';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 
 export default function CreateContent() {
   const { userId } = useAuth();
+  const { user } = useUser();
   const searchParams = useSearchParams();
   const router = useRouter();
   const type = searchParams.get('type') as 'markdown' | 'snippet' | null;
+  const editId = searchParams.get('edit'); // ID para edición
   
   const [title, setTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -25,19 +27,74 @@ export default function CreateContent() {
   const [content, setContent] = useState('');
   const [tabs, setTabs] = useState<any[]>([]);
   const [observations, setObservations] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [snippetType, setSnippetType] = useState<'markdown' | 'snippet' | null>(null);
 
   useEffect(() => {
-    if (!type || !['markdown', 'snippet'].includes(type)) {
+    if (editId) {
+      // Modo edición - cargar datos del snippet
+      setIsEditing(true);
+      loadSnippetData();
+    } else if (!type || !['markdown', 'snippet'].includes(type)) {
+      // Modo creación - verificar tipo válido
       router.push('/snippets');
     }
-  }, [type, router]);
+  }, [type, editId, router]);
+
+  const loadSnippetData = async () => {
+    if (!editId || !userId) return;
+
+    setLoading(true);
+    try {
+      const userEmail = user?.primaryEmailAddress?.emailAddress || '';
+      const snippet = await getSnippetById(editId, userId, userEmail);
+      
+      if (snippet) {
+        setTitle(snippet.title);
+        setContent(snippet.code);
+        setObservations(snippet.observations || '');
+        setSelectedFolderId(snippet.folder_id);
+        setSnippetType(snippet.type);
+        
+        // Si es un snippet con tabs, cargar los tabs
+        if (snippet.tabs && snippet.tabs.length > 0) {
+          setTabs(snippet.tabs);
+        } else {
+          // Si no tiene tabs, crear uno con el código principal
+          setTabs([{
+            id: 1,
+            title: snippet.title,
+            language: snippet.language,
+            code: snippet.code
+          }]);
+        }
+      } else {
+        alert('Snippet no encontrado');
+        router.push('/snippets');
+      }
+    } catch (error) {
+      console.error('Error loading snippet:', error);
+      alert('Error cargando el snippet');
+      router.push('/snippets');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = () => {
     if (!title.trim()) {
       alert('Por favor ingresa un título');
       return;
     }
-    setShowFolderSelector(true);
+    
+    // Si estamos editando, guardar directamente sin mostrar modal
+    if (isEditing) {
+      handleFolderSelect(selectedFolderId);
+    } else {
+      // Solo en modo creación mostrar selector de carpeta
+      setShowFolderSelector(true);
+    }
   };
 
   const handleFolderSelect = async (folderId: string | null) => {
@@ -48,11 +105,13 @@ export default function CreateContent() {
     }
 
     try {
+      const snippetType = isEditing ? (editId ? await getSnippetById(editId, userId) : null)?.type || 'snippet' : type as 'snippet' | 'markdown';
+      
       const snippetData = {
         title: title.trim(),
-        type: type as 'snippet' | 'markdown',
+        type: snippetType,
         folder_id: folderId,
-        ...(type === 'markdown' ? {
+        ...(snippetType === 'markdown' ? {
           code: content,
           language: 'markdown',
           description: 'Documento Markdown'
@@ -65,9 +124,14 @@ export default function CreateContent() {
         })
       };
 
-      console.log('Saving snippet:', snippetData);
+      console.log(isEditing ? 'Updating snippet:' : 'Saving snippet:', snippetData);
       
-      const savedSnippet = await createSnippet(snippetData, userId);
+      let savedSnippet;
+      if (isEditing && editId) {
+        savedSnippet = await updateSnippet(editId, snippetData);
+      } else {
+        savedSnippet = await createSnippet(snippetData, userId);
+      }
       
       if (savedSnippet) {
         console.log('Snippet saved successfully:', savedSnippet);
@@ -83,7 +147,15 @@ export default function CreateContent() {
     router.push('/snippets');
   };
 
-  if (!type) return null;
+  if (!type && !isEditing) return null;
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -127,7 +199,7 @@ export default function CreateContent() {
                 ${THEME_COLORS.dashboard.title}
                 min-w-[200px]
               `}
-              placeholder={`Nuevo ${type === 'markdown' ? 'Markdown' : 'Snippet'}`}
+              placeholder={isEditing ? `Editando ${title || 'snippet'}` : `Nuevo ${type === 'markdown' ? 'Markdown' : 'Snippet'}`}
               autoFocus
             />
           ) : (
@@ -141,23 +213,23 @@ export default function CreateContent() {
                 ${title ? '' : 'text-opacity-60'}
               `}
             >
-              {title || `Nuevo ${type === 'markdown' ? 'Markdown' : 'Snippet'}`}
+              {title || (isEditing ? 'Editando snippet' : `Nuevo ${type === 'markdown' ? 'Markdown' : 'Snippet'}`)}
             </h1>
           )}
 
           <span className={`
             px-2 py-1 text-xs font-medium rounded-full
-            ${type === 'markdown' 
+            ${(isEditing ? snippetType : type) === 'markdown' 
               ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' 
               : 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
             }
           `}>
-            {type === 'markdown' ? 'Markdown' : 'Snippet'}
+            {(isEditing ? snippetType : type) === 'markdown' ? 'Markdown' : 'Snippet'}
           </span>
         </div>
 
         <div className="flex items-center space-x-2">
-          {type === 'markdown' && (
+          {(isEditing ? snippetType : type) === 'markdown' && (
             <button
               onClick={() => setShowPreview(!showPreview)}
               className={`
@@ -192,17 +264,20 @@ export default function CreateContent() {
 
       {/* Content */}
       <div className="flex-1 overflow-hidden">
-        {type === 'markdown' ? (
+        {(isEditing ? snippetType : type) === 'markdown' ? (
           <MarkdownEditor 
             showPreview={showPreview}
             onTitleChange={setTitle}
             onContentChange={setContent}
+            initialContent={content}
           />
         ) : (
           <SnippetEditor 
             onTitleChange={setTitle}
             onTabsChange={setTabs}
             onObservationsChange={setObservations}
+            initialTabs={tabs}
+            initialObservations={observations}
           />
         )}
       </div>

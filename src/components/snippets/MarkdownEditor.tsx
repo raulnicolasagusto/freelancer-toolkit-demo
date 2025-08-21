@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { THEME_COLORS } from '@/lib/theme-colors';
 import { Eye, Edit } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -9,9 +9,11 @@ interface MarkdownEditorProps {
   showPreview: boolean;
   onTitleChange: (title: string) => void;
   onContentChange: (content: string) => void;
+  initialContent?: string;
 }
 
-export default function MarkdownEditor({ showPreview, onTitleChange, onContentChange }: MarkdownEditorProps) {
+export default function MarkdownEditor({ showPreview, onTitleChange, onContentChange, initialContent }: MarkdownEditorProps) {
+  const isInitialized = useRef(false);
   const [content, setContent] = useState(`# Bienvenido a tu Markdown
 
 ## Características principales
@@ -48,14 +50,24 @@ console.log(saludar('Usuario'));
 > **Tip:** Puedes cambiar entre modo edición y vista previa usando el botón en la barra superior.
 `);
 
+  // Load initial content if provided (solo una vez)
   useEffect(() => {
-    // Extract title from first h1 in content
-    const lines = content.split('\n');
-    const titleLine = lines.find(line => line.startsWith('# '));
-    if (titleLine) {
-      const extractedTitle = titleLine.replace('# ', '').trim();
-      if (extractedTitle) {
-        onTitleChange(extractedTitle);
+    if (initialContent && !isInitialized.current) {
+      setContent(initialContent);
+      isInitialized.current = true;
+    }
+  }, [initialContent]);
+
+  useEffect(() => {
+    // Extract title from first h1 in content (solo si no hay contenido inicial)
+    if (!isInitialized.current) {
+      const lines = content.split('\n');
+      const titleLine = lines.find(line => line.startsWith('# '));
+      if (titleLine) {
+        const extractedTitle = titleLine.replace('# ', '').trim();
+        if (extractedTitle) {
+          onTitleChange(extractedTitle);
+        }
       }
     }
     // Pass content to parent

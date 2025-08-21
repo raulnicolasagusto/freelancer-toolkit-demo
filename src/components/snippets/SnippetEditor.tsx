@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { THEME_COLORS } from '@/lib/theme-colors';
 import { Plus, X, Code } from 'lucide-react';
 import LanguageSelector from './LanguageSelector';
@@ -17,9 +17,11 @@ interface SnippetEditorProps {
   onTitleChange: (title: string) => void;
   onTabsChange: (tabs: Tab[]) => void;
   onObservationsChange: (observations: string) => void;
+  initialTabs?: Tab[];
+  initialObservations?: string;
 }
 
-export default function SnippetEditor({ onTitleChange, onTabsChange, onObservationsChange }: SnippetEditorProps) {
+export default function SnippetEditor({ onTitleChange, onTabsChange, onObservationsChange, initialTabs, initialObservations }: SnippetEditorProps) {
   const [tabs, setTabs] = useState<Tab[]>([
     {
       id: '1',
@@ -53,12 +55,34 @@ export { saludar, obtenerDatos };`
   const [activeTab, setActiveTab] = useState('1');
   const [observations, setObservations] = useState('Agrega aquí tus observaciones sobre este conjunto de snippets...');
   const [isEditingObservations, setIsEditingObservations] = useState(false);
+  
+  // Refs para controlar la inicialización
+  const isInitialized = useRef(false);
+  const isTabsLoaded = useRef(false);
+  const isObservationsLoaded = useRef(false);
 
   const currentTab = tabs.find(tab => tab.id === activeTab);
 
+  // Load initial data if provided (solo una vez)
   useEffect(() => {
-    // Update title based on first tab or observations
-    if (tabs.length > 0) {
+    if (initialTabs && initialTabs.length > 0 && !isTabsLoaded.current) {
+      setTabs(initialTabs);
+      setActiveTab(initialTabs[0].id);
+      isTabsLoaded.current = true;
+      isInitialized.current = true;
+    }
+  }, [initialTabs]);
+
+  useEffect(() => {
+    if (initialObservations && !isObservationsLoaded.current) {
+      setObservations(initialObservations);
+      isObservationsLoaded.current = true;
+    }
+  }, [initialObservations]);
+
+  useEffect(() => {
+    // Update title based on first tab or observations (solo si no hay initialTabs)
+    if (tabs.length > 0 && !isInitialized.current) {
       onTitleChange(`Snippet Collection - ${tabs.length} archivo${tabs.length !== 1 ? 's' : ''}`);
     }
     // Pass tabs to parent
