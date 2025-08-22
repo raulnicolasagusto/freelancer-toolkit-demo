@@ -24,7 +24,7 @@ interface SnippetEditorProps {
 }
 
 export default function SnippetEditor({ onTitleChange, onTabsChange, onObservationsChange, initialTabs, initialObservations, isEditorDarkMode: propIsEditorDarkMode, onThemeChange }: SnippetEditorProps) {
-  const [localIsEditorDarkMode, setLocalIsEditorDarkMode] = useState(false);
+  const [localIsEditorDarkMode, setLocalIsEditorDarkMode] = useState(true);
   
   const isEditorDarkMode = propIsEditorDarkMode !== undefined ? propIsEditorDarkMode : localIsEditorDarkMode;
   const [tabs, setTabs] = useState<Tab[]>([

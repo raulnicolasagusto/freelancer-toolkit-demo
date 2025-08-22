@@ -33,7 +33,7 @@ export default function CreateContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [snippetType, setSnippetType] = useState<'markdown' | 'snippet' | null>(null);
-  const [isEditorDarkMode, setIsEditorDarkMode] = useState(false);
+  const [isEditorDarkMode, setIsEditorDarkMode] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 

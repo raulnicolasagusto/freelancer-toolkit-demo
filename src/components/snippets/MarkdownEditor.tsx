@@ -24,7 +24,7 @@ interface MarkdownEditorProps {
 export default function MarkdownEditor({ showPreview, onTitleChange, onContentChange, initialContent, isEditorDarkMode: propIsEditorDarkMode, onThemeChange }: MarkdownEditorProps) {
   const isInitialized = useRef(false);
   const [systemDarkMode, setSystemDarkMode] = useState(false);
-  const [localIsEditorDarkMode, setLocalIsEditorDarkMode] = useState(false);
+  const [localIsEditorDarkMode, setLocalIsEditorDarkMode] = useState(true);
   
   const isEditorDarkMode = propIsEditorDarkMode !== undefined ? propIsEditorDarkMode : localIsEditorDarkMode;
   const [content, setContent] = useState(`# Bienvenido a tu Markdown
