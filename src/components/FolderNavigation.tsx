@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronDown, Folder } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder as FolderIcon } from 'lucide-react';
 import { THEME_COLORS } from '@/lib/theme-colors';
 import { useFolders } from '@/hooks/useFolders';
 import Link from 'next/link';
@@ -77,7 +77,7 @@ export default function FolderNavigation({ type, isCollapsed, basePath }: Folder
               className="w-4 h-4 rounded flex items-center justify-center"
               style={{ backgroundColor: folder.color + '20' }}
             >
-              <Folder size={12} style={{ color: folder.color }} />
+              <FolderIcon size={12} style={{ color: folder.color }} />
             </div>
             
             <AnimatePresence mode="wait">

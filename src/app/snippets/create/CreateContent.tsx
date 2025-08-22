@@ -55,7 +55,7 @@ export default function CreateContent() {
         setTitle(snippet.title);
         setContent(snippet.code);
         setObservations(snippet.observations || '');
-        setSelectedFolderId(snippet.folder_id);
+        setSelectedFolderId(snippet.folder_id || null);
         setSnippetType(snippet.type);
         
         // Si es un snippet con tabs, cargar los tabs

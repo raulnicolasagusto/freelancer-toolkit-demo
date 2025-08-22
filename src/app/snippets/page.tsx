@@ -2,7 +2,7 @@
 
 import { t } from '@/lib/i18n';
 import { THEME_COLORS } from '@/lib/theme-colors';
-import { Plus, Trash2, Edit3, Folder, Home } from 'lucide-react';
+import { Plus, Trash2, Edit3, Folder as FolderIcon, Home } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CreateModal from '@/components/snippets/CreateModal';
@@ -283,7 +283,7 @@ export default function SnippetsPage() {
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: currentFolder.color + '20' }}
                 >
-                  <Folder size={18} style={{ color: currentFolder.color }} />
+                  <FolderIcon size={18} style={{ color: currentFolder.color }} />
                 </div>
                 <div>
                   <h1 className={`text-3xl font-bold ${THEME_COLORS.dashboard.title}`}>
@@ -355,7 +355,7 @@ export default function SnippetsPage() {
           <div className="text-center py-12">
             <div className={`${THEME_COLORS.icons.iconBackgrounds.blue} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4`}>
               {currentFolder ? (
-                <Folder size={32} style={{ color: currentFolder.color }} />
+                <FolderIcon size={32} style={{ color: currentFolder.color }} />
               ) : (
                 <Home size={32} className={THEME_COLORS.icons.snippets} />
               )}
