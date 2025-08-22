@@ -377,3 +377,58 @@ export function buildFolderTree(folders: Folder[]): Folder[] {
 
   return rootFolders;
 }
+
+// Función para obtener la ruta completa de una carpeta
+export function getFolderPath(folderId: string, folders: Folder[]): Folder[] {
+  const folderMap = new Map<string, Folder>();
+  folders.forEach(folder => {
+    folderMap.set(folder.id, folder);
+  });
+
+  const path: Folder[] = [];
+  let currentFolder = folderMap.get(folderId);
+
+  while (currentFolder) {
+    path.unshift(currentFolder);
+    currentFolder = currentFolder.parent_folder_id 
+      ? folderMap.get(currentFolder.parent_folder_id) 
+      : undefined;
+  }
+
+  return path;
+}
+
+// Función para obtener información de una carpeta específica
+export async function getFolderById(folderId: string, clerkUserId?: string, userEmail?: string): Promise<Folder | null> {
+  try {
+    if (!clerkUserId) {
+      console.error('No clerk user ID provided');
+      return null;
+    }
+
+    const supabase = createClient();
+    const userData = await getUserData(clerkUserId, userEmail);
+    
+    if (!userData) {
+      console.error('User not found');
+      return null;
+    }
+
+    const { data: folder, error } = await supabase
+      .from('folders')
+      .select('*')
+      .eq('id', folderId)
+      .eq('user_id', userData.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching folder:', error);
+      return null;
+    }
+
+    return folder;
+  } catch (error) {
+    console.error('Error in getFolderById:', error);
+    return null;
+  }
+}

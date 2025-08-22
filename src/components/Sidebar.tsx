@@ -84,6 +84,11 @@ export function Sidebar({ className }: SidebarProps) {
 
   // Determinar item activo basado en la ruta actual
   const getActiveItem = () => {
+    // Si estamos en rutas de snippets (/snippets/create, /snippets/edit, etc.)
+    if (pathname.startsWith('/snippets')) {
+      return 'snippets';
+    }
+    
     const item = navItems.find(nav => nav.href === pathname);
     return item?.id || 'dashboard';
   };

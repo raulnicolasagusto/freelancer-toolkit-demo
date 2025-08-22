@@ -1,8 +1,8 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronRight, Home } from 'lucide-react';
+import { ChevronRight, Home, Folder } from 'lucide-react';
 import { 
   LayoutDashboard, 
   Code2, 
@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { THEME_COLORS } from '@/lib/theme-colors';
 import { t } from '@/lib/i18n';
+import { useFolders } from '@/hooks/useFolders';
+import { getFolderPath } from '@/lib/snippets';
 
 interface BreadcrumbItem {
   label: string;
@@ -20,7 +22,7 @@ interface BreadcrumbItem {
   isActive: boolean;
 }
 
-const getPageConfig = (pathname: string): BreadcrumbItem[] => {
+const getPageConfig = (pathname: string, folderId?: string | null, folders?: any[]): BreadcrumbItem[] => {
   const breadcrumbs: BreadcrumbItem[] = [
     {
       label: t('topBar.breadcrumbs.home'),
@@ -56,14 +58,53 @@ const getPageConfig = (pathname: string): BreadcrumbItem[] => {
 
   // Si no estamos en home, agregar la página actual
   if (pathname !== '/') {
-    const currentPage = pageConfigs[pathname as keyof typeof pageConfigs];
+    let currentPage;
+    let actualHref = pathname;
+
+    // Manejar rutas de snippets (create, edit, etc.)
+    if (pathname.startsWith('/snippets')) {
+      currentPage = pageConfigs['/snippets'];
+      actualHref = '/snippets';
+    } 
+    // Manejar otras rutas de sección
+    else if (pathname.startsWith('/notes')) {
+      currentPage = pageConfigs['/notes'];
+      actualHref = '/notes';
+    }
+    else if (pathname.startsWith('/productivity')) {
+      currentPage = pageConfigs['/productivity'];
+      actualHref = '/productivity';
+    }
+    else if (pathname.startsWith('/resources')) {
+      currentPage = pageConfigs['/resources'];
+      actualHref = '/resources';
+    }
+    else {
+      currentPage = pageConfigs[pathname as keyof typeof pageConfigs];
+    }
+
     if (currentPage) {
       breadcrumbs.push({
         label: currentPage.label,
-        href: pathname,
+        href: actualHref,
         icon: currentPage.icon,
-        isActive: true
+        isActive: !folderId // Solo activo si no hay carpeta seleccionada
       });
+
+      // Si hay una carpeta seleccionada, agregar la ruta de carpetas
+      if (folderId && folders && folders.length > 0) {
+        const folderPath = getFolderPath(folderId, folders);
+        
+        folderPath.forEach((folder, index) => {
+          const isLastFolder = index === folderPath.length - 1;
+          breadcrumbs.push({
+            label: folder.name,
+            href: `${actualHref}?folder=${folder.id}`,
+            icon: Folder,
+            isActive: isLastFolder
+          });
+        });
+      }
     }
   }
 
@@ -72,7 +113,13 @@ const getPageConfig = (pathname: string): BreadcrumbItem[] => {
 
 export function Breadcrumb() {
   const pathname = usePathname();
-  const breadcrumbs = getPageConfig(pathname);
+  const searchParams = useSearchParams();
+  const folderId = searchParams.get('folder');
+  
+  // Obtener folders para construir el path
+  const { folders } = useFolders('snippets'); // Por ahora solo snippets, podrías hacer esto dinámico
+  
+  const breadcrumbs = getPageConfig(pathname, folderId, folders);
 
   return (
     <nav className={THEME_COLORS.topBar.breadcrumbs.container}>

@@ -6,7 +6,7 @@ import { ChevronRight, ChevronDown, Folder } from 'lucide-react';
 import { THEME_COLORS } from '@/lib/theme-colors';
 import { useFolders } from '@/hooks/useFolders';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { type Folder } from '@/lib/snippets';
 
 interface FolderNavigationProps {
@@ -19,6 +19,8 @@ export default function FolderNavigation({ type, isCollapsed, basePath }: Folder
   const { folderTree, loading } = useFolders(type);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentFolderId = searchParams.get('folder');
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders);
@@ -34,7 +36,7 @@ export default function FolderNavigation({ type, isCollapsed, basePath }: Folder
     const hasChildren = folder.children && folder.children.length > 0;
     const isExpanded = expandedFolders.has(folder.id);
     const folderPath = `${basePath}?folder=${folder.id}`;
-    const isActive = pathname.includes(folderPath);
+    const isActive = currentFolderId === folder.id;
 
     return (
       <div key={folder.id}>
