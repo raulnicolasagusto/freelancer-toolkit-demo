@@ -12,6 +12,8 @@ interface FolderCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   type: 'snippets' | 'notes';
+  parentFolderId?: string | null;
+  parentFolderName?: string;
   onFolderCreated?: () => void;
 }
 
@@ -28,7 +30,7 @@ const FOLDER_COLORS = [
   '#6b7280', // gray
 ];
 
-export default function FolderCreateModal({ isOpen, onClose, type, onFolderCreated }: FolderCreateModalProps) {
+export default function FolderCreateModal({ isOpen, onClose, type, parentFolderId, parentFolderName, onFolderCreated }: FolderCreateModalProps) {
   const { userId } = useAuth();
   const { user } = useUser();
   const [folderName, setFolderName] = useState('');
@@ -55,12 +57,16 @@ export default function FolderCreateModal({ isOpen, onClose, type, onFolderCreat
       const folderData = {
         name: folderName.trim(),
         color: selectedColor,
-        type: type
+        type: type,
+        parent_folder_id: parentFolderId
       };
 
       await createFolder(folderData, userId, userEmail);
       
-      toast.success(`Carpeta "${folderName.trim()}" creada exitosamente`);
+      const message = parentFolderName 
+        ? `Subcarpeta "${folderName.trim()}" creada dentro de "${parentFolderName}"`
+        : `Carpeta "${folderName.trim()}" creada exitosamente`;
+      toast.success(message);
       
       // Reset form
       setFolderName('');
@@ -125,7 +131,10 @@ export default function FolderCreateModal({ isOpen, onClose, type, onFolderCreat
                       Nueva Carpeta
                     </h2>
                     <p className={`text-sm ${THEME_COLORS.dashboard.metadata}`}>
-                      Crear carpeta para {type === 'snippets' ? 'snippets' : 'notas'}
+                      {parentFolderName 
+                        ? `Crear subcarpeta dentro de "${parentFolderName}"`
+                        : `Crear carpeta para ${type === 'snippets' ? 'snippets' : 'notas'}`
+                      }
                     </p>
                   </div>
                 </div>

@@ -29,11 +29,12 @@ interface FolderSelectorProps {
   onSelect: (folderId: string | null) => void;
   type: 'snippets' | 'notes';
   title: string;
+  defaultSelectedFolderId?: string | null;
 }
 
 // Folders will be loaded from database
 
-export default function FolderSelector({ isOpen, onClose, onSelect, type, title }: FolderSelectorProps) {
+export default function FolderSelector({ isOpen, onClose, onSelect, type, title, defaultSelectedFolderId }: FolderSelectorProps) {
   const { userId } = useAuth();
   const { user } = useUser();
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -50,8 +51,10 @@ export default function FolderSelector({ isOpen, onClose, onSelect, type, title 
   useEffect(() => {
     if (isOpen) {
       loadFolders();
+      // Set default selected folder
+      setSelectedFolder(defaultSelectedFolderId || null);
     }
-  }, [isOpen, type]);
+  }, [isOpen, type, defaultSelectedFolderId]);
 
   // Build folder tree when folders change
   useEffect(() => {

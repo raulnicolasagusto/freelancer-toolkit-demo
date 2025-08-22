@@ -428,7 +428,8 @@ export default function SnippetsPage() {
       {/* Create Modal */}
       <CreateModal 
         isOpen={showCreateModal} 
-        onClose={() => setShowCreateModal(false)} 
+        onClose={() => setShowCreateModal(false)}
+        currentFolderId={currentFolderId}
       />
 
       {/* Folder Create Modal */}
@@ -436,9 +437,14 @@ export default function SnippetsPage() {
         isOpen={showFolderCreateModal} 
         onClose={() => setShowFolderCreateModal(false)}
         type="snippets"
+        parentFolderId={currentFolderId}
+        parentFolderName={currentFolder?.name}
         onFolderCreated={() => {
-          // Aquí puedes agregar lógica para refrescar la lista de carpetas si es necesario
           setShowFolderCreateModal(false);
+          // Refrescar después de un pequeño delay para que se vea el toast
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }}
       />
     </div>

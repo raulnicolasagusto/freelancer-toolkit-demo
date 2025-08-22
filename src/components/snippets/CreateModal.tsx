@@ -9,14 +9,16 @@ import { useRouter } from 'next/navigation';
 interface CreateModalProps {
   isOpen: boolean;
   onClose: () => void;
+  currentFolderId?: string | null;
 }
 
-export default function CreateModal({ isOpen, onClose }: CreateModalProps) {
+export default function CreateModal({ isOpen, onClose, currentFolderId }: CreateModalProps) {
   const router = useRouter();
 
   const handleSelectType = (type: 'markdown' | 'snippet') => {
     onClose();
-    router.push(`/snippets/create?type=${type}`);
+    const folderParam = currentFolderId ? `&folder=${currentFolderId}` : '';
+    router.push(`/snippets/create?type=${type}${folderParam}`);
   };
 
   return (

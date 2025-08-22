@@ -19,6 +19,7 @@ export default function CreateContent() {
   const router = useRouter();
   const type = searchParams.get('type') as 'markdown' | 'snippet' | null;
   const editId = searchParams.get('edit'); // ID para edición
+  const currentFolderId = searchParams.get('folder'); // Carpeta actual desde donde se está creando
   
   const [title, setTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -351,6 +352,7 @@ export default function CreateContent() {
         onSelect={handleFolderSelect}
         type="snippets"
         title={title || `Nuevo ${type}`}
+        defaultSelectedFolderId={currentFolderId}
       />
     </motion.div>
   );
