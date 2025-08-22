@@ -108,8 +108,12 @@ export default function FolderNavigation({ type, isCollapsed, basePath, onDelete
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ duration: 0.2 }}
                   className="text-sm font-medium truncate"
+                  title={folder.name}
                 >
-                  {folder.name}
+                  {folder.name.length > 25 
+                    ? `${folder.name.substring(0, 22)}...` 
+                    : folder.name
+                  }
                 </motion.span>
               )}
             </AnimatePresence>

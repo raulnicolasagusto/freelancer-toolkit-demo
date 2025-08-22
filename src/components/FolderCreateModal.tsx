@@ -165,9 +165,14 @@ export default function FolderCreateModal({ isOpen, onClose, type, parentFolderI
                 <input
                   type="text"
                   value={folderName}
-                  onChange={(e) => setFolderName(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 50) {
+                      setFolderName(e.target.value);
+                    }
+                  }}
                   placeholder="Ej: Proyectos React, APIs, Tutoriales..."
                   disabled={isCreating}
+                  maxLength={50}
                   className={`
                     w-full px-3 py-2 rounded-lg border
                     ${THEME_COLORS.topBar.search.input.background}
@@ -179,6 +184,11 @@ export default function FolderCreateModal({ isOpen, onClose, type, parentFolderI
                   `}
                   autoFocus
                 />
+                <div className="flex justify-end mt-1">
+                  <span className={`text-xs ${folderName.length > 45 ? 'text-orange-500' : THEME_COLORS.dashboard.metadata}`}>
+                    {folderName.length}/50
+                  </span>
+                </div>
               </div>
 
               {/* Color Selection */}
