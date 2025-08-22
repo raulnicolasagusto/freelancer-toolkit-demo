@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { THEME_COLORS } from '@/lib/theme-colors';
 import { Eye, Edit } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 interface MarkdownEditorProps {
   showPreview: boolean;
@@ -86,7 +89,12 @@ console.log(saludar('Usuario'));
             // Preview Mode
             <div className="flex-1 overflow-y-auto p-6">
               <div className={`prose prose-slate dark:prose-invert max-w-none ${THEME_COLORS.dashboard.title}`}>
-                <ReactMarkdown>{content}</ReactMarkdown>
+                <ReactMarkdown
+                  remarkPlugins={[remarkMath]}
+                  rehypePlugins={[rehypeKatex]}
+                >
+                  {content}
+                </ReactMarkdown>
               </div>
             </div>
           ) : (

@@ -47,22 +47,19 @@ const getNavItems = (): NavItem[] => [
     id: 'snippets',
     label: t('sidebar.nav.snippets'),
     icon: Code2,
-    href: '/snippets',
-    badge: 12
+    href: '/snippets'
   },
   {
     id: 'notes',
     label: t('sidebar.nav.notes'),
     icon: StickyNote,
-    href: '/notes',
-    badge: 8
+    href: '/notes'
   },
   {
     id: 'productivity',
     label: t('sidebar.nav.productivity'),
     icon: CheckSquare,
-    href: '/productivity',
-    badge: 3
+    href: '/productivity'
   },
   {
     id: 'resources',
@@ -277,16 +274,6 @@ export function Sidebar({ className }: SidebarProps) {
                         className="flex items-center justify-between flex-1 ml-3"
                       >
                         <span className="font-medium">{item.label}</span>
-                        <div className="flex items-center space-x-2">
-                          {item.badge && (
-                            <span className={cn(
-                              `${THEME_COLORS.sidebar.nav.badge.background} ${THEME_COLORS.sidebar.nav.badge.text} text-xs px-2 py-0.5 rounded-full`,
-                              isActive && `${THEME_COLORS.sidebar.nav.badge.active.background} ${THEME_COLORS.sidebar.nav.badge.active.text}`
-                            )}>
-                              {item.badge}
-                            </span>
-                          )}
-                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
