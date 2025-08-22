@@ -22,28 +22,31 @@ interface CodeMirrorEditorProps {
   value: string;
   language: string;
   onChange: (value: string) => void;
+  isDarkMode?: boolean;
 }
 
-export default function CodeMirrorEditor({ value, language, onChange }: CodeMirrorEditorProps) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+export default function CodeMirrorEditor({ value, language, onChange, isDarkMode: propIsDarkMode }: CodeMirrorEditorProps) {
+  const [systemDarkMode, setSystemDarkMode] = useState(false);
 
   useEffect(() => {
-    // Detect dark mode
-    const checkDarkMode = () => {
-      setIsDarkMode(document.documentElement.classList.contains('dark'));
-    };
-    
-    checkDarkMode();
-    
-    // Watch for theme changes
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, []);
+    // Detect system dark mode if no prop is provided
+    if (propIsDarkMode === undefined) {
+      const checkDarkMode = () => {
+        setSystemDarkMode(document.documentElement.classList.contains('dark'));
+      };
+      
+      checkDarkMode();
+      
+      // Watch for theme changes
+      const observer = new MutationObserver(checkDarkMode);
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+      
+      return () => observer.disconnect();
+    }
+  }, [propIsDarkMode]);
 
   const getLanguageExtension = (lang: string): Extension[] => {
     const langLower = lang.toLowerCase();
@@ -88,7 +91,7 @@ export default function CodeMirrorEditor({ value, language, onChange }: CodeMirr
     }
   };
 
-  // Create light theme
+  // Simple light theme without complex selection overrides
   const lightTheme = EditorView.theme({
     '&': {
       color: '#374151',
@@ -100,9 +103,6 @@ export default function CodeMirrorEditor({ value, language, onChange }: CodeMirr
     },
     '.cm-focused .cm-cursor': {
       borderLeftColor: '#374151'
-    },
-    '.cm-focused .cm-selectionBackground, ::selection': {
-      backgroundColor: '#e5e7eb'
     },
     '.cm-gutters': {
       backgroundColor: '#f9fafb',
@@ -118,7 +118,8 @@ export default function CodeMirrorEditor({ value, language, onChange }: CodeMirr
   }, { dark: false });
 
   const extensions = getLanguageExtension(language);
-  const theme = isDarkMode ? oneDark : lightTheme;
+  const isDarkModeActive = propIsDarkMode !== undefined ? propIsDarkMode : systemDarkMode;
+  const theme = isDarkModeActive ? oneDark : lightTheme;
 
   return (
     <div className="h-full overflow-hidden">
@@ -130,7 +131,7 @@ export default function CodeMirrorEditor({ value, language, onChange }: CodeMirr
         onChange={(val) => onChange(val)}
         basicSetup={{
           lineNumbers: true,
-          foldGutter: true,
+          foldGutter: false,
           dropCursor: false,
           allowMultipleSelections: false,
           indentOnInput: true,

@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { THEME_COLORS } from '@/lib/theme-colors';
-import { ArrowLeft, Save, Eye, Copy } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Copy, Sun, Moon } from 'lucide-react';
 import MarkdownEditor from '@/components/snippets/MarkdownEditor';
 import SnippetEditor from '@/components/snippets/SnippetEditor';
 import FolderSelector from '@/components/snippets/FolderSelector';
@@ -30,6 +30,7 @@ export default function CreateContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [snippetType, setSnippetType] = useState<'markdown' | 'snippet' | null>(null);
+  const [isEditorDarkMode, setIsEditorDarkMode] = useState(false);
 
   useEffect(() => {
     if (editId) {
@@ -188,17 +189,18 @@ export default function CreateContent() {
     >
       {/* Header */}
       <div className={`
-        ${THEME_COLORS.topBar.background} ${THEME_COLORS.topBar.border}
-        p-4 flex items-center justify-between
+        ${isEditorDarkMode ? 'bg-gray-800 border-gray-700' : `${THEME_COLORS.topBar.background} ${THEME_COLORS.topBar.border}`}
+        p-4 flex items-center justify-between transition-colors duration-200
       `}>
         <div className="flex items-center space-x-4">
           <button
             onClick={handleBack}
             className={`
-              p-2 rounded-lg
-              ${THEME_COLORS.topBar.actions.button.background}
-              ${THEME_COLORS.topBar.actions.button.text} ${THEME_COLORS.topBar.actions.button.textHover}
-              ${THEME_COLORS.transitions.all}
+              p-2 rounded-lg transition-all duration-200
+              ${isEditorDarkMode 
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white' 
+                : `${THEME_COLORS.topBar.actions.button.background} ${THEME_COLORS.topBar.actions.button.text} ${THEME_COLORS.topBar.actions.button.textHover}`
+              }
             `}
           >
             <ArrowLeft size={18} />
@@ -218,7 +220,7 @@ export default function CreateContent() {
               }}
               className={`
                 text-xl font-semibold bg-transparent border-none outline-none
-                ${THEME_COLORS.dashboard.title}
+                ${isEditorDarkMode ? 'text-white' : THEME_COLORS.dashboard.title}
                 min-w-[200px]
               `}
               placeholder={isEditing ? `Editando ${title || 'snippet'}` : `Nuevo ${type === 'markdown' ? 'Markdown' : 'Snippet'}`}
@@ -228,10 +230,8 @@ export default function CreateContent() {
             <h1
               onClick={() => setIsEditingTitle(true)}
               className={`
-                text-xl font-semibold cursor-pointer
-                ${THEME_COLORS.dashboard.title}
-                hover:${THEME_COLORS.dashboard.subtitle}
-                ${THEME_COLORS.transitions.all}
+                text-xl font-semibold cursor-pointer transition-all duration-200
+                ${isEditorDarkMode ? 'text-white hover:text-gray-300' : `${THEME_COLORS.dashboard.title} hover:${THEME_COLORS.dashboard.subtitle}`}
                 ${title ? '' : 'text-opacity-60'}
               `}
             >
@@ -251,17 +251,34 @@ export default function CreateContent() {
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Theme Toggle */}
+          <button
+            onClick={() => setIsEditorDarkMode(!isEditorDarkMode)}
+            className={`
+              p-2 rounded-lg transition-all duration-200
+              ${isEditorDarkMode 
+                ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }
+            `}
+            title={isEditorDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          >
+            {isEditorDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
           {(isEditing ? snippetType : type) === 'markdown' && (
             <button
               onClick={() => setShowPreview(!showPreview)}
               className={`
-                flex items-center space-x-2 px-3 py-2 rounded-lg
+                flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200
                 ${showPreview 
                   ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' 
-                  : THEME_COLORS.topBar.actions.button.background
+                  : (isEditorDarkMode 
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
+                    : THEME_COLORS.topBar.actions.button.background
+                  )
                 }
-                ${THEME_COLORS.topBar.actions.button.text} ${THEME_COLORS.topBar.actions.button.textHover}
-                ${THEME_COLORS.transitions.all}
+                ${!showPreview && !isEditorDarkMode ? `${THEME_COLORS.topBar.actions.button.text} ${THEME_COLORS.topBar.actions.button.textHover}` : ''}
               `}
             >
               <Eye size={16} />
@@ -272,10 +289,11 @@ export default function CreateContent() {
           <button
             onClick={handleCopyContent}
             className={`
-              p-2 rounded-lg
-              ${THEME_COLORS.topBar.actions.button.background}
-              ${THEME_COLORS.topBar.actions.button.text} ${THEME_COLORS.topBar.actions.button.textHover}
-              ${THEME_COLORS.transitions.all}
+              p-2 rounded-lg transition-all duration-200
+              ${isEditorDarkMode 
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white' 
+                : `${THEME_COLORS.topBar.actions.button.background} ${THEME_COLORS.topBar.actions.button.text} ${THEME_COLORS.topBar.actions.button.textHover}`
+              }
             `}
             title="Copiar contenido"
           >
@@ -305,6 +323,8 @@ export default function CreateContent() {
             onTitleChange={setTitle}
             onContentChange={setContent}
             initialContent={content}
+            isEditorDarkMode={isEditorDarkMode}
+            onThemeChange={setIsEditorDarkMode}
           />
         ) : (
           <SnippetEditor 
@@ -313,6 +333,8 @@ export default function CreateContent() {
             onObservationsChange={setObservations}
             initialTabs={tabs}
             initialObservations={observations}
+            isEditorDarkMode={isEditorDarkMode}
+            onThemeChange={setIsEditorDarkMode}
           />
         )}
       </div>

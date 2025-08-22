@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { THEME_COLORS } from '@/lib/theme-colors';
-import { Plus, X, Code } from 'lucide-react';
+import { Plus, X, Code, Sun, Moon } from 'lucide-react';
 import LanguageSelector from './LanguageSelector';
 import CodeMirrorEditor from './CodeMirrorEditor';
 
@@ -19,9 +19,14 @@ interface SnippetEditorProps {
   onObservationsChange: (observations: string) => void;
   initialTabs?: Tab[];
   initialObservations?: string;
+  isEditorDarkMode?: boolean;
+  onThemeChange?: (isDark: boolean) => void;
 }
 
-export default function SnippetEditor({ onTitleChange, onTabsChange, onObservationsChange, initialTabs, initialObservations }: SnippetEditorProps) {
+export default function SnippetEditor({ onTitleChange, onTabsChange, onObservationsChange, initialTabs, initialObservations, isEditorDarkMode: propIsEditorDarkMode, onThemeChange }: SnippetEditorProps) {
+  const [localIsEditorDarkMode, setLocalIsEditorDarkMode] = useState(false);
+  
+  const isEditorDarkMode = propIsEditorDarkMode !== undefined ? propIsEditorDarkMode : localIsEditorDarkMode;
   const [tabs, setTabs] = useState<Tab[]>([
     {
       id: '1',
@@ -168,13 +173,12 @@ export { saludar, obtenerDatos };`
   if (!currentTab) return null;
 
   return (
-    <div className={`h-full flex ${THEME_COLORS.main.background} ${THEME_COLORS.main.backgroundDark}`}>
+    <div className={`h-full flex ${isEditorDarkMode ? 'bg-gray-900' : THEME_COLORS.main.background}`}>
       {/* Main Editor Area */}
       <div className="flex-1 flex flex-col">
         {/* Tabs */}
         <div className={`
-          ${THEME_COLORS.dashboard.card.background} 
-          border-b ${THEME_COLORS.dashboard.card.border}
+          ${isEditorDarkMode ? 'bg-gray-800 border-gray-700' : `${THEME_COLORS.dashboard.card.background} border-b ${THEME_COLORS.dashboard.card.border}`}
           flex items-center
         `}>
           <div className="flex-1 flex items-center overflow-x-auto">
@@ -187,11 +191,11 @@ export { saludar, obtenerDatos };`
                   border-b-2 ${THEME_COLORS.transitions.all}
                   ${activeTab === tab.id 
                     ? 'border-blue-500 bg-blue-500/5' 
-                    : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                    : `border-transparent ${isEditorDarkMode ? 'hover:bg-gray-700' : 'hover:bg-slate-50'}`
                   }
                 `}
               >
-                <Code size={16} className={activeTab === tab.id ? 'text-blue-500' : THEME_COLORS.dashboard.metadata} />
+                <Code size={16} className={activeTab === tab.id ? 'text-blue-500' : (isEditorDarkMode ? 'text-gray-400' : THEME_COLORS.dashboard.metadata)} />
                 
                 <input
                   type="text"
@@ -199,7 +203,7 @@ export { saludar, obtenerDatos };`
                   onChange={(e) => handleTitleEdit(tab.id, e.target.value)}
                   className={`
                     bg-transparent border-none outline-none text-sm font-medium
-                    ${activeTab === tab.id ? THEME_COLORS.dashboard.title : THEME_COLORS.dashboard.subtitle}
+                    ${activeTab === tab.id ? (isEditorDarkMode ? 'text-white' : THEME_COLORS.dashboard.title) : (isEditorDarkMode ? 'text-gray-300' : THEME_COLORS.dashboard.subtitle)}
                     min-w-[80px] max-w-[150px]
                   `}
                   onFocus={(e) => e.target.select()}
@@ -236,12 +240,11 @@ export { saludar, obtenerDatos };`
 
         {/* Editor Header */}
         <div className={`
-          ${THEME_COLORS.dashboard.card.background}
-          border-b ${THEME_COLORS.dashboard.card.border}
+          ${isEditorDarkMode ? 'bg-gray-800 border-gray-700' : `${THEME_COLORS.dashboard.card.background} border-b ${THEME_COLORS.dashboard.card.border}`}
           p-4 flex items-center justify-between
         `}>
           <div className="flex items-center space-x-4">
-            <span className={`text-sm font-medium ${THEME_COLORS.dashboard.subtitle}`}>
+            <span className={`text-sm font-medium ${isEditorDarkMode ? 'text-gray-300' : THEME_COLORS.dashboard.subtitle}`}>
               Lenguaje:
             </span>
             <LanguageSelector
@@ -250,8 +253,31 @@ export { saludar, obtenerDatos };`
             />
           </div>
           
-          <div className={`text-sm ${THEME_COLORS.dashboard.metadata}`}>
-            Líneas: {currentTab.code.split('\n').length}
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => {
+                const newTheme = !isEditorDarkMode;
+                if (onThemeChange) {
+                  onThemeChange(newTheme);
+                } else {
+                  setLocalIsEditorDarkMode(newTheme);
+                }
+              }}
+              className={`
+                p-2 rounded-lg transition-all duration-200
+                ${isEditorDarkMode 
+                  ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }
+              `}
+              title={isEditorDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              {isEditorDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            
+            <div className={`text-sm ${isEditorDarkMode ? 'text-gray-400' : THEME_COLORS.dashboard.metadata}`}>
+              Líneas: {currentTab.code.split('\n').length}
+            </div>
           </div>
         </div>
 
@@ -261,21 +287,21 @@ export { saludar, obtenerDatos };`
             value={currentTab.code}
             language={currentTab.language}
             onChange={handleCodeChange}
+            isDarkMode={isEditorDarkMode}
           />
         </div>
       </div>
 
       {/* Observations Panel */}
       <div className={`
-        w-80 border-l ${THEME_COLORS.dashboard.card.border}
-        ${THEME_COLORS.dashboard.card.background}
+        w-80 border-l ${isEditorDarkMode ? 'border-gray-700 bg-gray-800' : `${THEME_COLORS.dashboard.card.border} ${THEME_COLORS.dashboard.card.background}`}
         flex flex-col
       `}>
-        <div className="p-4 border-b ${THEME_COLORS.dashboard.card.border}">
-          <h3 className={`font-semibold ${THEME_COLORS.dashboard.title}`}>
+        <div className={`p-4 border-b ${isEditorDarkMode ? 'border-gray-700' : THEME_COLORS.dashboard.card.border}`}>
+          <h3 className={`font-semibold ${isEditorDarkMode ? 'text-white' : THEME_COLORS.dashboard.title}`}>
             Observaciones
           </h3>
-          <p className={`text-sm ${THEME_COLORS.dashboard.metadata} mt-1`}>
+          <p className={`text-sm ${isEditorDarkMode ? 'text-gray-400' : THEME_COLORS.dashboard.metadata} mt-1`}>
             Agrega notas sobre este conjunto de snippets
           </p>
         </div>
@@ -288,7 +314,7 @@ export { saludar, obtenerDatos };`
               onBlur={() => setIsEditingObservations(false)}
               className={`
                 w-full h-full resize-none bg-transparent border-none outline-none
-                ${THEME_COLORS.dashboard.title}
+                ${isEditorDarkMode ? 'text-white' : THEME_COLORS.dashboard.title}
                 focus:ring-2 focus:ring-blue-500/20 rounded-lg p-2
               `}
               placeholder="Agrega tus observaciones aquí..."
@@ -299,8 +325,8 @@ export { saludar, obtenerDatos };`
               onClick={() => setIsEditingObservations(true)}
               className={`
                 h-full cursor-text p-2 rounded-lg
-                ${observations.includes('Agrega aquí') ? THEME_COLORS.dashboard.metadata : THEME_COLORS.dashboard.subtitle}
-                hover:bg-slate-50 dark:hover:bg-slate-700/30
+                ${observations.includes('Agrega aquí') ? (isEditorDarkMode ? 'text-gray-500' : THEME_COLORS.dashboard.metadata) : (isEditorDarkMode ? 'text-gray-300' : THEME_COLORS.dashboard.subtitle)}
+                ${isEditorDarkMode ? 'hover:bg-gray-700' : 'hover:bg-slate-50'}
                 ${THEME_COLORS.transitions.all}
               `}
             >
