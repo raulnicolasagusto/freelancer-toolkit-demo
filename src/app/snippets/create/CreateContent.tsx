@@ -227,12 +227,12 @@ export default function CreateContent() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="h-screen flex flex-col"
+      className="h-full flex flex-col"
     >
       {/* Header */}
       <div className={`
         ${isEditorDarkMode ? 'bg-gray-800 border-gray-700' : `${THEME_COLORS.topBar.background} ${THEME_COLORS.topBar.border}`}
-        p-4 flex items-center justify-between transition-colors duration-200
+        p-4 flex items-center justify-between transition-colors duration-200 rounded-t-lg shadow-xl drop-shadow-2xl
       `}>
         <div className="flex items-center space-x-4">
           <button
@@ -378,7 +378,7 @@ export default function CreateContent() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {(isEditing ? snippetType : type) === 'markdown' ? (
           <MarkdownEditor 
             showPreview={showPreview}

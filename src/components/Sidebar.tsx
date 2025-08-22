@@ -157,7 +157,7 @@ export function Sidebar({ className }: SidebarProps) {
         type: "tween"
       }}
       className={cn(
-        `relative flex flex-col ${THEME_COLORS.sidebar.background} border-r ${THEME_COLORS.sidebar.border} h-screen overflow-hidden`,
+        `relative flex flex-col ${THEME_COLORS.sidebar.background} border-r ${THEME_COLORS.sidebar.border} h-screen overflow-hidden shadow-xl`,
         className
       )}
     >

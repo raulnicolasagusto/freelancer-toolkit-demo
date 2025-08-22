@@ -46,10 +46,17 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar />
-        <main className={`flex-1 overflow-auto ${THEME_COLORS.main.background} ${THEME_COLORS.main.backgroundDark}`}>
-          <div className="p-6 lg:p-8">
-            {children}
-          </div>
+        <main className={`flex-1 flex flex-col ${THEME_COLORS.main.background} ${THEME_COLORS.main.backgroundDark}`}>
+          {/* Verificar si es una página que necesita altura completa */}
+          {pathname.includes('/create') || pathname.includes('/edit') || pathname.includes('/snippets/create') ? (
+            <div className="flex-1 h-full px-6 lg:px-8 pt-6 lg:pt-8">
+              {children}
+            </div>
+          ) : (
+            <div className="flex-1 overflow-auto p-6 lg:p-8">
+              {children}
+            </div>
+          )}
         </main>
       </div>
     </div>
