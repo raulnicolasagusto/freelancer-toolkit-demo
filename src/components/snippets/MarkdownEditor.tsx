@@ -97,7 +97,11 @@ console.log(saludar('Usuario'));
       if (titleLine) {
         const extractedTitle = titleLine.replace('# ', '').trim();
         if (extractedTitle) {
-          onTitleChange(extractedTitle);
+          // Limitar título a 60 caracteres
+          const limitedTitle = extractedTitle.length > 60 
+            ? extractedTitle.substring(0, 60) 
+            : extractedTitle;
+          onTitleChange(limitedTitle);
         }
       }
     }

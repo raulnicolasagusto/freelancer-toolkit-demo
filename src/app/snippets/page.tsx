@@ -138,7 +138,15 @@ function SnippetCard({ snippet, onClick, onDelete }: SnippetCardProps) {
             <div className={`w-3 h-3 ${THEME_COLORS.snippets.terminal.dots.yellow} rounded-full`}></div>
             <div className={`w-3 h-3 ${THEME_COLORS.snippets.terminal.dots.green} rounded-full`}></div>
           </div>
-          <span className={`${THEME_COLORS.snippets.terminal.titleText} text-sm font-mono`}>{snippet.title}</span>
+          <span 
+            className={`${THEME_COLORS.snippets.terminal.titleText} text-sm font-mono`}
+            title={snippet.title}
+          >
+            {snippet.title.length > 30 
+              ? `${snippet.title.substring(0, 27)}...` 
+              : snippet.title
+            }
+          </span>
         </div>
         <span className={`text-sm font-medium ${getLanguageColor(snippet.language)}`}>
           {snippet.language}
@@ -212,6 +220,8 @@ export default function SnippetsPage() {
     loadSnippets();
     if (currentFolderId) {
       loadCurrentFolder();
+    } else {
+      setCurrentFolder(null);
     }
   }, [currentFolderId, userId]);
 

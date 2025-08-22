@@ -253,7 +253,11 @@ export default function CreateContent() {
             <input
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.length <= 60) {
+                  setTitle(e.target.value);
+                }
+              }}
               onBlur={() => setIsEditingTitle(false)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -266,6 +270,7 @@ export default function CreateContent() {
                 min-w-[200px]
               `}
               placeholder={isEditing ? `Editando ${title || 'snippet'}` : `Nuevo ${type === 'markdown' ? 'Markdown' : 'Snippet'}`}
+              maxLength={60}
               autoFocus
             />
           ) : (
