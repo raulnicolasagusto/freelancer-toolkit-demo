@@ -358,7 +358,7 @@ export function Sidebar({ className }: SidebarProps) {
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="ml-4 mt-2"
+                  className="mt-2"
                 >
                   <FolderNavigation 
                     type="snippets" 
@@ -376,7 +376,7 @@ export function Sidebar({ className }: SidebarProps) {
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="ml-4 mt-2"
+                  className="mt-2"
                 >
                   <FolderNavigation 
                     type="notes" 

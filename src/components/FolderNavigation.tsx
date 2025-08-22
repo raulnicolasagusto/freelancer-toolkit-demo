@@ -76,7 +76,7 @@ export default function FolderNavigation({ type, isCollapsed, basePath, onDelete
               }}
               className={`
                 opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                p-1 rounded hover:bg-red-500/20 mr-2
+                 rounded hover:bg-red-500/20
                 text-red-500 hover:text-red-600
               `}
               title={`Eliminar carpeta "${folder.name}"`}
@@ -139,7 +139,7 @@ export default function FolderNavigation({ type, isCollapsed, basePath, onDelete
 
   if (loading) {
     return (
-      <div className="space-y-1 px-3">
+      <div className="space-y-1 px-1">
         {[1, 2].map((i) => (
           <div key={i} className="flex items-center space-x-2 px-3 py-2">
             <div className="w-4 h-4 bg-slate-600 rounded animate-pulse"></div>
@@ -157,7 +157,7 @@ export default function FolderNavigation({ type, isCollapsed, basePath, onDelete
   }
 
   return (
-    <div className="space-y-1 px-3">
+    <div className="space-y-1 px-1">
       {folderTree.map((folder) => renderFolderItem(folder))}
     </div>
   );
