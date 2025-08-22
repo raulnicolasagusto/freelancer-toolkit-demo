@@ -10,6 +10,7 @@ import FolderSelector from '@/components/snippets/FolderSelector';
 import { createSnippet, getSnippetById, updateSnippet } from '@/lib/snippets';
 import { motion } from 'framer-motion';
 import { useAuth, useUser } from '@clerk/nextjs';
+import toast from 'react-hot-toast';
 
 export default function CreateContent() {
   const { userId } = useAuth();
@@ -71,12 +72,12 @@ export default function CreateContent() {
           }]);
         }
       } else {
-        alert('Snippet no encontrado');
+        toast.error('Snippet no encontrado');
         router.push('/snippets');
       }
     } catch (error) {
       console.error('Error loading snippet:', error);
-      alert('Error cargando el snippet');
+      toast.error('Error cargando el snippet');
       router.push('/snippets');
     } finally {
       setLoading(false);
@@ -85,7 +86,7 @@ export default function CreateContent() {
 
   const handleSave = () => {
     if (!title.trim()) {
-      alert('Por favor ingresa un título');
+      toast.error('Por favor ingresa un título');
       return;
     }
     
@@ -101,7 +102,7 @@ export default function CreateContent() {
   const handleFolderSelect = async (folderId: string | null) => {
     if (!userId) {
       console.error('No user ID available');
-      alert('Error de autenticación. Intenta nuevamente.');
+      toast.error('Error de autenticación. Intenta nuevamente.');
       return;
     }
 
@@ -136,11 +137,15 @@ export default function CreateContent() {
       
       if (savedSnippet) {
         console.log('Snippet saved successfully:', savedSnippet);
+        // Mostrar notificación de éxito
+        const action = isEditing ? 'actualizado' : 'creado';
+        const type = snippetType === 'markdown' ? 'Markdown' : 'Snippet';
+        toast.success(`${type} ${action} exitosamente`);
         router.push('/snippets');
       }
     } catch (error) {
       console.error('Error saving snippet:', error);
-      alert('Error al guardar. Intenta nuevamente.');
+      toast.error('Error al guardar. Intenta nuevamente.');
     }
   };
 

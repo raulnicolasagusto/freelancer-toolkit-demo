@@ -5,6 +5,7 @@ import { THEME_COLORS } from "@/lib/theme-colors";
 import { ClerkProvider } from '@clerk/nextjs';
 import { ConditionalLayout } from "@/components/ConditionalLayout";
 import UserSync from "@/components/UserSync";
+import { Toaster } from 'react-hot-toast';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,23 @@ export default function RootLayout({
         >
           <UserSync />
           <ConditionalLayout>{children}</ConditionalLayout>
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+              success: {
+                duration: 3000,
+                style: {
+                  background: '#10b981',
+                  color: '#fff',
+                },
+              },
+            }}
+          />
         </body>
       </html>
     </ClerkProvider>
