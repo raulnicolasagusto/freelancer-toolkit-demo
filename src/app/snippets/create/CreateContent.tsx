@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { THEME_COLORS } from '@/lib/theme-colors';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Copy } from 'lucide-react';
 import MarkdownEditor from '@/components/snippets/MarkdownEditor';
 import SnippetEditor from '@/components/snippets/SnippetEditor';
 import FolderSelector from '@/components/snippets/FolderSelector';
@@ -147,6 +147,28 @@ export default function CreateContent() {
     router.push('/snippets');
   };
 
+  const handleCopyContent = async () => {
+    try {
+      let contentToCopy = '';
+      
+      if ((isEditing ? snippetType : type) === 'markdown') {
+        contentToCopy = content;
+      } else {
+        // Para snippets, copiar todos los tabs
+        if (tabs.length > 0) {
+          contentToCopy = tabs.map(tab => 
+            `// ${tab.title} (${tab.language})\n${tab.code}`
+          ).join('\n\n');
+        }
+      }
+      
+      await navigator.clipboard.writeText(contentToCopy);
+      // Aquí podrías agregar una notificación visual de éxito
+    } catch (err) {
+      console.error('Error copying content:', err);
+    }
+  };
+
   if (!type && !isEditing) return null;
 
   if (loading) {
@@ -246,6 +268,19 @@ export default function CreateContent() {
               <span>{showPreview ? 'Editar' : 'Vista previa'}</span>
             </button>
           )}
+
+          <button
+            onClick={handleCopyContent}
+            className={`
+              p-2 rounded-lg
+              ${THEME_COLORS.topBar.actions.button.background}
+              ${THEME_COLORS.topBar.actions.button.text} ${THEME_COLORS.topBar.actions.button.textHover}
+              ${THEME_COLORS.transitions.all}
+            `}
+            title="Copiar contenido"
+          >
+            <Copy size={16} />
+          </button>
           
           <button
             onClick={handleSave}
