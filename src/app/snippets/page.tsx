@@ -2,10 +2,11 @@
 
 import { t } from '@/lib/i18n';
 import { THEME_COLORS } from '@/lib/theme-colors';
-import { Plus, Trash2, Edit3, Folder as FolderIcon, Home } from 'lucide-react';
+import { Plus, Trash2, Edit3, Folder as FolderIcon, Home, FolderPlus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CreateModal from '@/components/snippets/CreateModal';
+import FolderCreateModal from '@/components/FolderCreateModal';
 import { getSnippets, getFolders, type Snippet, type Folder } from '@/lib/snippets';
 import { useAuth, useUser } from '@clerk/nextjs';
 
@@ -211,6 +212,7 @@ export default function SnippetsPage() {
   const currentFolderId = searchParams.get('folder');
   
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showFolderCreateModal, setShowFolderCreateModal] = useState(false);
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -304,21 +306,39 @@ export default function SnippetsPage() {
             )}
           </div>
           
-          <button
-            onClick={handleAddSnippet}
-            className={`
-              flex items-center space-x-2 px-4 py-2
-              ${THEME_COLORS.sidebar.nav.item.active.background}
-              ${THEME_COLORS.sidebar.nav.item.active.text}
-              border ${THEME_COLORS.sidebar.nav.item.active.border}
-              rounded-lg font-medium
-              hover:${THEME_COLORS.sidebar.nav.item.active.textHover}
-              ${THEME_COLORS.transitions.all}
-            `}
-          >
-            <Plus size={18} />
-            <span>{t('snippets.addButton')}</span>
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleAddSnippet}
+              className={`
+                flex items-center space-x-2 px-4 py-2
+                ${THEME_COLORS.sidebar.nav.item.active.background}
+                ${THEME_COLORS.sidebar.nav.item.active.text}
+                border ${THEME_COLORS.sidebar.nav.item.active.border}
+                rounded-lg font-medium
+                hover:${THEME_COLORS.sidebar.nav.item.active.textHover}
+                ${THEME_COLORS.transitions.all}
+              `}
+            >
+              <Plus size={18} />
+              <span>{t('snippets.addButton')}</span>
+            </button>
+
+            <button
+              onClick={() => setShowFolderCreateModal(true)}
+              className={`
+                flex items-center space-x-2 px-3 py-2
+                ${THEME_COLORS.topBar.actions.button.background}
+                ${THEME_COLORS.topBar.actions.button.text}
+                border ${THEME_COLORS.dashboard.card.border}
+                rounded-lg font-medium
+                hover:${THEME_COLORS.topBar.actions.button.textHover}
+                ${THEME_COLORS.transitions.all}
+              `}
+              title="Crear nueva carpeta"
+            >
+              <FolderPlus size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Loading State */}
@@ -409,6 +429,17 @@ export default function SnippetsPage() {
       <CreateModal 
         isOpen={showCreateModal} 
         onClose={() => setShowCreateModal(false)} 
+      />
+
+      {/* Folder Create Modal */}
+      <FolderCreateModal 
+        isOpen={showFolderCreateModal} 
+        onClose={() => setShowFolderCreateModal(false)}
+        type="snippets"
+        onFolderCreated={() => {
+          // Aquí puedes agregar lógica para refrescar la lista de carpetas si es necesario
+          setShowFolderCreateModal(false);
+        }}
       />
     </div>
   );

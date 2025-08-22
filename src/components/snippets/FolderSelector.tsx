@@ -1,11 +1,25 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Folder, FolderPlus, ChevronRight, ChevronDown, Home, Save } from 'lucide-react';
+import { X, Folder, FolderPlus, ChevronRight, ChevronDown, Home, Save, Palette } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { THEME_COLORS } from '@/lib/theme-colors';
 import { getFolders, createFolder, buildFolderTree, type Folder } from '@/lib/snippets';
 import { useAuth, useUser } from '@clerk/nextjs';
+import toast from 'react-hot-toast';
+
+const FOLDER_COLORS = [
+  '#3b82f6', // blue
+  '#10b981', // emerald
+  '#f59e0b', // amber
+  '#ef4444', // red
+  '#8b5cf6', // violet
+  '#06b6d4', // cyan
+  '#84cc16', // lime
+  '#f97316', // orange
+  '#ec4899', // pink
+  '#6b7280', // gray
+];
 
 // Remove duplicate interface, using the one from @/lib/snippets
 
@@ -29,6 +43,7 @@ export default function FolderSelector({ isOpen, onClose, onSelect, type, title 
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderParent, setNewFolderParent] = useState<string | null>(null);
+  const [newFolderColor, setNewFolderColor] = useState(FOLDER_COLORS[0]);
   const [loading, setLoading] = useState(false);
 
   // Load folders when modal opens
@@ -95,21 +110,23 @@ export default function FolderSelector({ isOpen, onClose, onSelect, type, title 
           name: newFolderName.trim(),
           type,
           parent_folder_id: newFolderParent,
-          color: '#6366f1',
+          color: newFolderColor,
           icon: 'folder'
         }, userId, userEmail);
         
         if (newFolder) {
           await loadFolders(); // Reload folders
           setSelectedFolder(newFolder.id); // Select the new folder
+          toast.success(`Carpeta "${newFolderName.trim()}" creada exitosamente`);
         }
         
         setNewFolderName('');
         setNewFolderParent(null);
+        setNewFolderColor(FOLDER_COLORS[0]);
         setIsCreatingFolder(false);
       } catch (error) {
         console.error('Error creating folder:', error);
-        alert('Error al crear la carpeta. Intenta nuevamente.');
+        toast.error('Error al crear la carpeta. Intenta nuevamente.');
       } finally {
         setLoading(false);
       }
@@ -286,35 +303,88 @@ export default function FolderSelector({ isOpen, onClose, onSelect, type, title 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       className={`
-                        p-3 rounded-lg border-2 border-dashed ${THEME_COLORS.dashboard.card.border}
+                        p-4 rounded-lg border-2 border-dashed ${THEME_COLORS.dashboard.card.border}
+                        space-y-4
                       `}
                     >
-                      <input
-                        type="text"
-                        value={newFolderName}
-                        onChange={(e) => setNewFolderName(e.target.value)}
-                        placeholder="Nombre de la carpeta"
-                        className={`
-                          w-full p-2 rounded border ${THEME_COLORS.dashboard.card.border}
-                          ${THEME_COLORS.dashboard.card.background}
-                          ${THEME_COLORS.dashboard.title}
-                          focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
-                        `}
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleCreateFolder();
-                          if (e.key === 'Escape') setIsCreatingFolder(false);
-                        }}
-                      />
-                      <div className="flex space-x-2 mt-2">
+                      {/* Folder Name Input */}
+                      <div>
+                        <input
+                          type="text"
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          placeholder="Nombre de la carpeta"
+                          className={`
+                            w-full p-2 rounded border ${THEME_COLORS.dashboard.card.border}
+                            ${THEME_COLORS.dashboard.card.background}
+                            ${THEME_COLORS.dashboard.title}
+                            focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                          `}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleCreateFolder();
+                            if (e.key === 'Escape') setIsCreatingFolder(false);
+                          }}
+                        />
+                      </div>
+
+                      {/* Color Selection */}
+                      <div>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Palette size={14} className={THEME_COLORS.dashboard.metadata} />
+                          <span className={`text-xs font-medium ${THEME_COLORS.dashboard.subtitle}`}>
+                            Color
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-2">
+                          {FOLDER_COLORS.map((color) => (
+                            <button
+                              key={color}
+                              type="button"
+                              onClick={() => setNewFolderColor(color)}
+                              className={`
+                                w-6 h-6 rounded border transition-all
+                                ${newFolderColor === color 
+                                  ? 'border-gray-400 scale-110' 
+                                  : 'border-transparent hover:scale-105'
+                                }
+                              `}
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Preview */}
+                      <div className={`p-2 rounded ${THEME_COLORS.topBar.search.input.background} border ${THEME_COLORS.dashboard.card.border}`}>
+                        <div className="flex items-center space-x-2">
+                          <div 
+                            className="w-4 h-4 rounded flex items-center justify-center"
+                            style={{ backgroundColor: newFolderColor + '20' }}
+                          >
+                            <Folder size={12} style={{ color: newFolderColor }} />
+                          </div>
+                          <span className={`text-xs ${THEME_COLORS.dashboard.title}`}>
+                            {newFolderName || 'Nombre de la carpeta'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex space-x-2">
                         <button
                           onClick={handleCreateFolder}
-                          className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                          disabled={!newFolderName.trim()}
+                          className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Crear
                         </button>
                         <button
-                          onClick={() => setIsCreatingFolder(false)}
+                          onClick={() => {
+                            setIsCreatingFolder(false);
+                            setNewFolderName('');
+                            setNewFolderColor(FOLDER_COLORS[0]);
+                          }}
                           className={`px-3 py-1 rounded text-sm ${THEME_COLORS.dashboard.subtitle} hover:${THEME_COLORS.dashboard.title}`}
                         >
                           Cancelar
