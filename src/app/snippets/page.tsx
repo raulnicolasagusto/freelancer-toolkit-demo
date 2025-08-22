@@ -7,8 +7,10 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CreateModal from '@/components/snippets/CreateModal';
 import FolderCreateModal from '@/components/FolderCreateModal';
-import { getSnippets, getFolders, type Snippet, type Folder } from '@/lib/snippets';
+import DeleteConfirmModal from '@/components/DeleteConfirmModal';
+import { getSnippets, getFolders, deleteSnippet, type Snippet, type Folder } from '@/lib/snippets';
 import { useAuth, useUser } from '@clerk/nextjs';
+import toast from 'react-hot-toast';
 
 // Datos de ejemplo para los snippets
 const EXAMPLE_SNIPPETS = [
@@ -102,11 +104,11 @@ interface SnippetCardProps {
     code: string;
     createdAt: string;
   };
-  onEdit: (id: string) => void;
+  onClick: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
+function SnippetCard({ snippet, onClick, onDelete }: SnippetCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   // Obtener las primeras 4 líneas del código
@@ -126,7 +128,7 @@ function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onEdit(snippet.id)}
+      onClick={() => onClick(snippet.id)}
     >
       {/* Terminal header */}
       <div className={`${THEME_COLORS.snippets.terminal.background} p-3 flex items-center justify-between`}>
@@ -175,28 +177,14 @@ function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onEdit(snippet.id);
-          }}
-          className={`
-            p-2 rounded-lg ${THEME_COLORS.snippets.actions.edit.background} border ${THEME_COLORS.snippets.actions.edit.border}
-            ${THEME_COLORS.snippets.actions.edit.text} ${THEME_COLORS.snippets.actions.edit.textHover} ${THEME_COLORS.snippets.actions.edit.backgroundHover}
-            ${THEME_COLORS.transitions.all}
-          `}
-          title={t('snippets.actions.edit')}
-        >
-          <Edit3 size={16} />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
             onDelete(snippet.id);
           }}
           className={`
-            p-2 rounded-lg ${THEME_COLORS.snippets.actions.delete.background} border ${THEME_COLORS.snippets.actions.delete.border}
-            ${THEME_COLORS.snippets.actions.delete.text} ${THEME_COLORS.snippets.actions.delete.textHover} ${THEME_COLORS.snippets.actions.delete.backgroundHover}
+            p-2 rounded-lg bg-red-500/10 border border-red-500/20
+            text-red-600 hover:text-red-700 hover:bg-red-500/20
             ${THEME_COLORS.transitions.all}
           `}
-          title={t('snippets.actions.delete')}
+          title="Eliminar snippet"
         >
           <Trash2 size={16} />
         </button>
@@ -213,6 +201,9 @@ export default function SnippetsPage() {
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFolderCreateModal, setShowFolderCreateModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [snippetToDelete, setSnippetToDelete] = useState<{id: string, title: string, type: 'snippet' | 'markdown'} | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -259,14 +250,49 @@ export default function SnippetsPage() {
     }
   };
 
-  const handleEdit = (id: string) => {
+  const handleSnippetClick = (id: string) => {
     // Navegar a la página de crear/editar con el ID del snippet
     window.location.href = `/snippets/create?edit=${id}`;
   };
 
-  const handleDelete = (id: string) => {
-    console.log('Delete snippet:', id);
-    // TODO: Implementar funcionalidad de eliminar
+  const handleDeleteRequest = (id: string) => {
+    // Encontrar el snippet para obtener su título y tipo
+    const snippet = snippets.find(s => s.id === id);
+    if (snippet) {
+      setSnippetToDelete({
+        id: snippet.id,
+        title: snippet.title,
+        type: snippet.type
+      });
+      setShowDeleteModal(true);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!snippetToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const success = await deleteSnippet(snippetToDelete.id);
+      
+      if (success) {
+        toast.success(`${snippetToDelete.type === 'markdown' ? 'Markdown' : 'Snippet'} "${snippetToDelete.title}" eliminado exitosamente`);
+        
+        // Actualizar la lista de snippets
+        setSnippets(snippets.filter(s => s.id !== snippetToDelete.id));
+        
+        // Cerrar modal
+        setShowDeleteModal(false);
+        setSnippetToDelete(null);
+      } else {
+        toast.error('Error al eliminar. Intenta nuevamente.');
+      }
+    } catch (error) {
+      console.error('Error deleting snippet:', error);
+      toast.error('Error al eliminar. Intenta nuevamente.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleAddSnippet = () => {
@@ -417,8 +443,8 @@ export default function SnippetsPage() {
                   code: snippet.code,
                   createdAt: new Date(snippet.created_at).toLocaleDateString()
                 }}
-                onEdit={() => handleEdit(snippet.id)}
-                onDelete={() => handleDelete(snippet.id)}
+                onClick={() => handleSnippetClick(snippet.id)}
+                onDelete={() => handleDeleteRequest(snippet.id)}
               />
             ))}
           </div>
@@ -446,6 +472,21 @@ export default function SnippetsPage() {
             window.location.reload();
           }, 1000);
         }}
+      />
+
+      {/* Delete Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          if (!isDeleting) {
+            setShowDeleteModal(false);
+            setSnippetToDelete(null);
+          }
+        }}
+        onConfirm={handleDeleteConfirm}
+        itemTitle={snippetToDelete?.title || ''}
+        itemType={snippetToDelete?.type || 'snippet'}
+        isDeleting={isDeleting}
       />
     </div>
   );

@@ -3,14 +3,15 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { THEME_COLORS } from '@/lib/theme-colors';
-import { ArrowLeft, Save, Eye, Copy, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Copy, Sun, Moon, Trash2 } from 'lucide-react';
 import MarkdownEditor from '@/components/snippets/MarkdownEditor';
 import SnippetEditor from '@/components/snippets/SnippetEditor';
 import FolderSelector from '@/components/snippets/FolderSelector';
-import { createSnippet, getSnippetById, updateSnippet } from '@/lib/snippets';
+import { createSnippet, getSnippetById, updateSnippet, deleteSnippet } from '@/lib/snippets';
 import { motion } from 'framer-motion';
 import { useAuth, useUser } from '@clerk/nextjs';
 import toast from 'react-hot-toast';
+import DeleteConfirmModal from '@/components/DeleteConfirmModal';
 
 export default function CreateContent() {
   const { userId } = useAuth();
@@ -33,6 +34,8 @@ export default function CreateContent() {
   const [loading, setLoading] = useState(false);
   const [snippetType, setSnippetType] = useState<'markdown' | 'snippet' | null>(null);
   const [isEditorDarkMode, setIsEditorDarkMode] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (editId) {
@@ -176,6 +179,39 @@ export default function CreateContent() {
     }
   };
 
+  const handleDeleteRequest = () => {
+    if (isEditing && editId) {
+      setShowDeleteModal(true);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!editId) return;
+
+    setIsDeleting(true);
+    try {
+      const success = await deleteSnippet(editId);
+      
+      if (success) {
+        const itemType = snippetType === 'markdown' ? 'Markdown' : 'Snippet';
+        toast.success(`${itemType} "${title}" eliminado exitosamente`);
+        
+        // Redirigir a la carpeta donde estaba el snippet
+        const folderParam = currentFolderId ? `?folder=${currentFolderId}` : '';
+        setTimeout(() => {
+          router.push(`/snippets${folderParam}`);
+        }, 1000);
+      } else {
+        toast.error('Error al eliminar. Intenta nuevamente.');
+      }
+    } catch (error) {
+      console.error('Error deleting snippet:', error);
+      toast.error('Error al eliminar. Intenta nuevamente.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (!type && !isEditing) return null;
 
   if (loading) {
@@ -305,6 +341,21 @@ export default function CreateContent() {
           >
             <Copy size={16} />
           </button>
+
+          {/* Botón eliminar - solo en modo edición */}
+          {isEditing && (
+            <button
+              onClick={handleDeleteRequest}
+              className={`
+                p-2 rounded-lg transition-all duration-200
+                bg-red-500/10 border border-red-500/20
+                text-red-600 hover:text-red-700 hover:bg-red-500/20
+              `}
+              title="Eliminar snippet"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
           
           <button
             onClick={handleSave}
@@ -353,6 +404,20 @@ export default function CreateContent() {
         type="snippets"
         title={title || `Nuevo ${type}`}
         defaultSelectedFolderId={currentFolderId}
+      />
+
+      {/* Delete Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          if (!isDeleting) {
+            setShowDeleteModal(false);
+          }
+        }}
+        onConfirm={handleDeleteConfirm}
+        itemTitle={title || 'Sin título'}
+        itemType={snippetType || 'snippet'}
+        isDeleting={isDeleting}
       />
     </motion.div>
   );
