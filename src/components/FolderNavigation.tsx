@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronDown, Folder as FolderIcon } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder as FolderIcon, Trash2 } from 'lucide-react';
 import { THEME_COLORS } from '@/lib/theme-colors';
 import { useFolders } from '@/hooks/useFolders';
 import Link from 'next/link';
@@ -13,9 +13,10 @@ interface FolderNavigationProps {
   type: 'snippets' | 'notes';
   isCollapsed: boolean;
   basePath: string;
+  onDeleteFolder?: (folder: Folder) => void;
 }
 
-export default function FolderNavigation({ type, isCollapsed, basePath }: FolderNavigationProps) {
+export default function FolderNavigation({ type, isCollapsed, basePath, onDeleteFolder }: FolderNavigationProps) {
   const { folderTree, loading } = useFolders(type);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const pathname = usePathname();
@@ -62,6 +63,25 @@ export default function FolderNavigation({ type, isCollapsed, basePath }: Folder
               ) : (
                 <ChevronRight size={14} />
               )}
+            </button>
+          )}
+
+          {/* Delete button - shows on hover */}
+          {onDeleteFolder && !isCollapsed && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDeleteFolder(folder);
+              }}
+              className={`
+                opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                p-1 rounded hover:bg-red-500/20 mr-2
+                text-red-500 hover:text-red-600
+              `}
+              title={`Eliminar carpeta "${folder.name}"`}
+            >
+              <Trash2 size={14} />
             </button>
           )}
 

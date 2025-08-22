@@ -177,17 +177,69 @@ export async function updateFolder(folderId: string, updates: Partial<Folder>): 
 export async function deleteFolder(folderId: string): Promise<boolean> {
   const supabase = createClient();
   
-  const { error } = await supabase
-    .from('folders')
-    .delete()
-    .eq('id', folderId);
+  try {
+    // Función recursiva para obtener todas las carpetas hijas
+    const getAllSubfolders = async (parentId: string): Promise<string[]> => {
+      const { data: subfolders, error } = await supabase
+        .from('folders')
+        .select('id')
+        .eq('parent_folder_id', parentId);
+      
+      if (error) {
+        console.error('Error getting subfolders:', error);
+        return [];
+      }
+      
+      let allSubfolders = subfolders?.map(f => f.id) || [];
+      
+      // Recursivamente obtener subcarpetas de cada subcarpeta
+      for (const subfolderId of allSubfolders) {
+        const deepSubfolders = await getAllSubfolders(subfolderId);
+        allSubfolders = [...allSubfolders, ...deepSubfolders];
+      }
+      
+      return allSubfolders;
+    };
 
-  if (error) {
-    console.error('Error deleting folder:', error);
+    // Obtener todas las carpetas que se van a eliminar (incluyendo la principal)
+    const subfoldersToDelete = await getAllSubfolders(folderId);
+    const allFoldersToDelete = [folderId, ...subfoldersToDelete];
+
+    console.log('Folders to delete:', allFoldersToDelete);
+
+    // Eliminar todos los snippets de todas las carpetas
+    for (const folderIdToDelete of allFoldersToDelete) {
+      const { error: snippetsError } = await supabase
+        .from('snippets')
+        .delete()
+        .eq('folder_id', folderIdToDelete);
+      
+      if (snippetsError) {
+        console.error(`Error deleting snippets from folder ${folderIdToDelete}:`, snippetsError);
+        return false;
+      }
+    }
+
+    // Eliminar todas las carpetas (empezando por las más profundas)
+    const foldersInReverseOrder = [...allFoldersToDelete].reverse();
+    for (const folderIdToDelete of foldersInReverseOrder) {
+      const { error: folderError } = await supabase
+        .from('folders')
+        .delete()
+        .eq('id', folderIdToDelete);
+      
+      if (folderError) {
+        console.error(`Error deleting folder ${folderIdToDelete}:`, folderError);
+        return false;
+      }
+    }
+
+    console.log('Folder and all its contents deleted successfully');
+    return true;
+  } catch (error) {
+    console.error('Error in deleteFolder:', error);
     return false;
   }
-
-  return true;
 }
 
 // Funciones para Snippets

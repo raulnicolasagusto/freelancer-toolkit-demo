@@ -21,8 +21,11 @@ import { t } from '@/lib/i18n';
 import { useUser, SignOutButton } from '@clerk/nextjs';
 import { LogOut } from 'lucide-react';
 import FolderNavigation from './FolderNavigation';
+import DeleteConfirmModal from './DeleteConfirmModal';
+import { deleteFolder, type Folder } from '@/lib/snippets';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 interface SidebarProps {
   className?: string;
@@ -73,6 +76,9 @@ export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedSnippets, setExpandedSnippets] = useState(false);
   const [expandedNotes, setExpandedNotes] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [folderToDelete, setFolderToDelete] = useState<Folder | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { user, isLoaded } = useUser();
   const pathname = usePathname();
   
@@ -103,6 +109,43 @@ export function Sidebar({ className }: SidebarProps) {
     : 'Usuario';
 
   const userEmail = user?.emailAddresses[0]?.emailAddress || '';
+
+  // Handlers para eliminar carpeta
+  const handleDeleteFolder = (folder: Folder) => {
+    setFolderToDelete(folder);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!folderToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const success = await deleteFolder(folderToDelete.id);
+      
+      if (success) {
+        toast.success(`Carpeta "${folderToDelete.name}" eliminada exitosamente`);
+        setShowDeleteModal(false);
+        setFolderToDelete(null);
+        // Recargar la página para actualizar la lista de carpetas
+        window.location.reload();
+      } else {
+        toast.error('Error al eliminar la carpeta. Intenta nuevamente.');
+      }
+    } catch (error) {
+      console.error('Error deleting folder:', error);
+      toast.error('Error al eliminar la carpeta. Intenta nuevamente.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!isDeleting) {
+      setShowDeleteModal(false);
+      setFolderToDelete(null);
+    }
+  };
 
   return (
     <motion.aside
@@ -321,6 +364,7 @@ export function Sidebar({ className }: SidebarProps) {
                     type="snippets" 
                     isCollapsed={false}
                     basePath="/snippets"
+                    onDeleteFolder={handleDeleteFolder}
                   />
                 </motion.div>
               )}
@@ -338,6 +382,7 @@ export function Sidebar({ className }: SidebarProps) {
                     type="notes" 
                     isCollapsed={false}
                     basePath="/notes"
+                    onDeleteFolder={handleDeleteFolder}
                   />
                 </motion.div>
               )}
@@ -375,6 +420,16 @@ export function Sidebar({ className }: SidebarProps) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Delete Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        itemTitle={folderToDelete?.name || 'Sin título'}
+        itemType="folder"
+        isDeleting={isDeleting}
+      />
     </motion.aside>
   );
 }

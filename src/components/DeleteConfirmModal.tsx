@@ -10,7 +10,7 @@ interface DeleteConfirmModalProps {
   onClose: () => void;
   onConfirm: () => void;
   itemTitle: string;
-  itemType: 'snippet' | 'markdown' | 'nota';
+  itemType: 'snippet' | 'markdown' | 'nota' | 'folder';
   isDeleting?: boolean;
 }
 
@@ -38,6 +38,7 @@ export default function DeleteConfirmModal({
       case 'snippet': return 'snippet';
       case 'markdown': return 'markdown';
       case 'nota': return 'nota';
+      case 'folder': return 'carpeta';
       default: return 'elemento';
     }
   };
@@ -117,17 +118,36 @@ export default function DeleteConfirmModal({
               </div>
 
               {/* Warning */}
-              <div className={`
-                p-3 rounded-lg bg-amber-500/5 border ${THEME_COLORS.dashboard.card.border} 
-                border-l-4 border-l-amber-500 mb-6
-              `}>
-                <div className="flex items-start space-x-2">
-                  <AlertTriangle size={16} className="text-amber-600 mt-0.5 flex-shrink-0" />
-                  <p className={`text-xs ${THEME_COLORS.dashboard.metadata}`}>
-                    Esta acción eliminará permanentemente el {getItemTypeText()} y no se podrá recuperar.
-                  </p>
+              {itemType === 'folder' ? (
+                <div className={`
+                  p-3 rounded-lg bg-red-500/10 border border-red-500/30
+                  border-l-4 border-l-red-500 mb-6
+                `}>
+                  <div className="flex items-start space-x-2">
+                    <AlertTriangle size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
+                    <div className="space-y-1">
+                      <p className={`text-xs font-medium text-red-700 dark:text-red-400`}>
+                        ⚠️ ELIMINACIÓN EN CASCADA
+                      </p>
+                      <p className={`text-xs ${THEME_COLORS.dashboard.metadata}`}>
+                        Esta acción eliminará permanentemente la carpeta y TODO su contenido: subcarpetas, snippets y archivos markdown. Esta acción no se puede deshacer.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className={`
+                  p-3 rounded-lg bg-amber-500/5 border ${THEME_COLORS.dashboard.card.border} 
+                  border-l-4 border-l-amber-500 mb-6
+                `}>
+                  <div className="flex items-start space-x-2">
+                    <AlertTriangle size={16} className="text-amber-600 mt-0.5 flex-shrink-0" />
+                    <p className={`text-xs ${THEME_COLORS.dashboard.metadata}`}>
+                      Esta acción eliminará permanentemente el {getItemTypeText()} y no se podrá recuperar.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex space-x-3">
