@@ -382,11 +382,6 @@ export function Sidebar({ className }: SidebarProps) {
                   transition={{ duration: 0.2 }}
                   className="mt-2"
                 >
-                  {/* Zona invisible para drop en raíz */}
-                  <div
-                    className="absolute inset-0 pointer-events-auto"
-                    data-drop-folder-id="root"
-                  ></div>
 
                   <FolderNavigation 
                     type="snippets" 
