@@ -145,7 +145,7 @@ export default function CreateContent() {
         const action = isEditing ? 'actualizado' : 'creado';
         const type = snippetType === 'markdown' ? 'Markdown' : 'Snippet';
         toast.success(`${type} ${action} exitosamente`);
-        router.push('/snippets');
+        // No redirigir, quedarse en el editor
       }
     } catch (error) {
       console.error('Error saving snippet:', error);
@@ -154,7 +154,9 @@ export default function CreateContent() {
   };
 
   const handleBack = () => {
-    router.push('/snippets');
+    // Regresar a la carpeta correcta donde estaba el snippet/markdown
+    const folderParam = selectedFolderId ? `?folder=${selectedFolderId}` : '';
+    router.push(`/snippets${folderParam}`);
   };
 
   const handleCopyContent = async () => {
