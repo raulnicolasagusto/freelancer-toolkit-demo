@@ -111,6 +111,7 @@ export const es = {
     pageTitle: "Mis Snippets",
     addButton: "Agregar",
     emptyState: "No tienes snippets guardados aún",
+    dragToMoveText: "Arrastra a una carpeta para moverlo",
     actions: {
       edit: "Editar snippet",
       delete: "Eliminar snippet"

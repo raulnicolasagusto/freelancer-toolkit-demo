@@ -106,5 +106,17 @@ export const en: Translations = {
   numbers: {
     categories: "categories",
     completed: "completed"
+  },
+
+  // === SNIPPETS PAGE ===
+  snippets: {
+    pageTitle: "My Snippets",
+    addButton: "Add",
+    emptyState: "You don't have any saved snippets yet",
+    dragToMoveText: "Drag to a folder to move it",
+    actions: {
+      edit: "Edit snippet",
+      delete: "Delete snippet"
+    }
   }
 };

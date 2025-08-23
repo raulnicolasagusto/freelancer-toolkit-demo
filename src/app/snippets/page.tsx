@@ -4,11 +4,12 @@ import { t } from '@/lib/i18n';
 import { THEME_COLORS } from '@/lib/theme-colors';
 import { Plus, Trash2, Edit3, Folder as FolderIcon, Home, FolderPlus } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import CreateModal from '@/components/snippets/CreateModal';
 import FolderCreateModal from '@/components/FolderCreateModal';
 import DeleteConfirmModal from '@/components/DeleteConfirmModal';
-import { getSnippets, getFolders, deleteSnippet, updateFolder, type Snippet, type Folder } from '@/lib/snippets';
+import { getSnippets, getFolders, deleteSnippet, updateFolder, updateSnippet, type Snippet, type Folder } from '@/lib/snippets';
 import { useAuth, useUser } from '@clerk/nextjs';
 import toast from 'react-hot-toast';
 
@@ -106,9 +107,14 @@ interface SnippetCardProps {
   };
   onClick: (id: string) => void;
   onDelete: (id: string) => void;
+  isDragging: boolean;
+  onDragStart: (id: string) => void;
+  onDragEnd: () => void;
+  onDragStartVisual: (id: string, x: number, y: number) => void;
+  onDragEndVisual: () => void;
 }
 
-function SnippetCard({ snippet, onClick, onDelete }: SnippetCardProps) {
+function SnippetCard({ snippet, onClick, onDelete, isDragging, onDragStart, onDragEnd, onDragStartVisual, onDragEndVisual }: SnippetCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   // Obtener las primeras 4 líneas del código
@@ -116,19 +122,34 @@ function SnippetCard({ snippet, onClick, onDelete }: SnippetCardProps) {
   const hasMoreLines = snippet.code.split('\n').length > 4;
 
   return (
-    <div
+    <motion.div
+      whileDrag={{ 
+        scale: 0.95, 
+        opacity: 0.7,
+        zIndex: 1000
+      }}
+      onMouseDown={(e) => {
+        if (e.button === 0) { // Solo botón izquierdo
+          onDragStartVisual(snippet.id, e.clientX, e.clientY);
+          onDragStart(snippet.id);
+        }
+      }}
       className={`
         relative group
         ${THEME_COLORS.dashboard.card.background}
         ${THEME_COLORS.dashboard.card.border}
         border rounded-xl overflow-hidden
         ${THEME_COLORS.transitions.all}
-        hover:scale-105 hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-slate-900/30
-        cursor-pointer
+        ${isDragging ? 'opacity-30 scale-85 blur-sm' : 'hover:scale-105'}
+        hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-slate-900/30
+        cursor-${isDragging ? 'grabbing' : 'grab'}
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onClick(snippet.id)}
+      onClick={() => !isDragging && onClick(snippet.id)}
+      style={{
+        cursor: isDragging ? 'grabbing' : 'grab'
+      }}
     >
       {/* Terminal header */}
       <div className={`${THEME_COLORS.snippets.terminal.background} p-3 flex items-center justify-between`}>
@@ -197,7 +218,7 @@ function SnippetCard({ snippet, onClick, onDelete }: SnippetCardProps) {
           <Trash2 size={16} />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -217,6 +238,10 @@ export default function SnippetsPage() {
   const [loading, setLoading] = useState(true);
   const [isEditingFolderName, setIsEditingFolderName] = useState(false);
   const [editingFolderName, setEditingFolderName] = useState('');
+  const [draggedSnippet, setDraggedSnippet] = useState<string | null>(null);
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const [isDraggingActive, setIsDraggingActive] = useState(false);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
 
   useEffect(() => {
     loadSnippets();
@@ -226,6 +251,81 @@ export default function SnippetsPage() {
       setCurrentFolder(null);
     }
   }, [currentFolderId, userId]);
+
+  useEffect(() => {
+    // Escuchar eventos de snippets movidos
+    const handleSnippetMoved = (event: CustomEvent) => {
+      const { snippetId } = event.detail;
+      // Remover el snippet de la lista actual inmediatamente
+      setSnippets(prev => prev.filter(s => s.id !== snippetId));
+    };
+
+    window.addEventListener('snippet-moved', handleSnippetMoved as EventListener);
+    
+    return () => {
+      window.removeEventListener('snippet-moved', handleSnippetMoved as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingActive) {
+        setDragPosition({ x: e.clientX, y: e.clientY });
+        
+        // Detectar elemento bajo el cursor
+        const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+        const dropZone = elementBelow?.closest('[data-drop-folder-id]');
+        
+        if (dropZone) {
+          const folderId = dropZone.getAttribute('data-drop-folder-id');
+          setDropTarget(folderId);
+        } else {
+          setDropTarget(null);
+        }
+      }
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (isDraggingActive && draggedSnippet) {
+        // Detectar drop
+        const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+        const dropZone = elementBelow?.closest('[data-drop-folder-id]');
+        
+        if (dropZone && draggedSnippet) {
+          const folderId = dropZone.getAttribute('data-drop-folder-id');
+          if (folderId) {
+            handleMoveSnippet(draggedSnippet, folderId);
+          }
+        }
+        
+        setIsDraggingActive(false);
+        setDraggedSnippet(null);
+        setDropTarget(null);
+        document.body.style.cursor = 'auto';
+        // Restaurar selección de texto
+        document.body.style.userSelect = 'auto';
+        document.body.style.webkitUserSelect = 'auto';
+      }
+    };
+
+    if (isDraggingActive) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'grabbing';
+      // Desactivar selección de texto durante drag
+      document.body.style.userSelect = 'none';
+      document.body.style.webkitUserSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'auto';
+      // Restaurar selección de texto
+      document.body.style.userSelect = 'auto';
+      document.body.style.webkitUserSelect = 'auto';
+    };
+  }, [isDraggingActive, draggedSnippet]);
 
   const loadSnippets = async () => {
     if (!userId) {
@@ -311,6 +411,15 @@ export default function SnippetsPage() {
     setShowCreateModal(true);
   };
 
+  const handleDragStartVisual = (id: string, x: number, y: number) => {
+    setIsDraggingActive(true);
+    setDragPosition({ x, y });
+  };
+
+  const handleDragEndVisual = () => {
+    setIsDraggingActive(false);
+  };
+
   const handleEditFolderName = () => {
     if (currentFolder) {
       setEditingFolderName(currentFolder.name);
@@ -340,6 +449,28 @@ export default function SnippetsPage() {
       toast.error('Error al actualizar el nombre');
     } finally {
       setIsEditingFolderName(false);
+    }
+  };
+
+  const handleMoveSnippet = async (snippetId: string, targetFolderId: string) => {
+    try {
+      const snippet = snippets.find(s => s.id === snippetId);
+      if (!snippet) return;
+
+      const updatedSnippet = await updateSnippet(snippetId, {
+        folder_id: targetFolderId === 'root' ? null : targetFolderId
+      });
+      
+      if (updatedSnippet) {
+        // Remover el snippet de la lista actual inmediatamente
+        setSnippets(prev => prev.filter(s => s.id !== snippetId));
+        toast.success(`"${snippet.title}" movido correctamente`);
+      } else {
+        toast.error('Error al mover el snippet');
+      }
+    } catch (error) {
+      console.error('Error moving snippet:', error);
+      toast.error('Error al mover el snippet');
     }
   };
 
@@ -521,6 +652,11 @@ export default function SnippetsPage() {
                 }}
                 onClick={() => handleSnippetClick(snippet.id)}
                 onDelete={() => handleDeleteRequest(snippet.id)}
+                isDragging={draggedSnippet === snippet.id}
+                onDragStart={(id) => setDraggedSnippet(id)}
+                onDragEnd={() => setDraggedSnippet(null)}
+                onDragStartVisual={handleDragStartVisual}
+                onDragEndVisual={handleDragEndVisual}
               />
             ))}
           </div>
@@ -564,6 +700,23 @@ export default function SnippetsPage() {
         itemType={snippetToDelete?.type || 'snippet'}
         isDeleting={isDeleting}
       />
+
+      {/* Rectángulo ficticio para drag visual */}
+      {isDraggingActive && draggedSnippet && (
+        <div
+          className="fixed pointer-events-none z-[9999] bg-blue-500/50 border-2 border-blue-400 rounded-lg px-2 py-1 shadow-lg"
+          style={{
+            left: dragPosition.x + 15,
+            top: dragPosition.y - 10,
+            fontSize: '12px',
+            color: 'white',
+            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          📄 {t('snippets.dragToMoveText')}
+        </div>
+      )}
     </div>
   );
 }

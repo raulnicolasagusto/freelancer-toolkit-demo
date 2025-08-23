@@ -14,11 +14,13 @@ interface FolderNavigationProps {
   isCollapsed: boolean;
   basePath: string;
   onDeleteFolder?: (folder: Folder) => void;
+  onDropSnippet?: (snippetId: string, folderId: string) => void;
 }
 
-export default function FolderNavigation({ type, isCollapsed, basePath, onDeleteFolder }: FolderNavigationProps) {
+export default function FolderNavigation({ type, isCollapsed, basePath, onDeleteFolder, onDropSnippet }: FolderNavigationProps) {
   const { folderTree, loading } = useFolders(type);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentFolderId = searchParams.get('folder');
@@ -33,11 +35,31 @@ export default function FolderNavigation({ type, isCollapsed, basePath, onDelete
     setExpandedFolders(newExpanded);
   };
 
+  const handleDragOver = (e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    setDragOverFolder(folderId);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverFolder(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    const snippetId = e.dataTransfer.getData('text/plain');
+    if (snippetId && onDropSnippet) {
+      onDropSnippet(snippetId, folderId);
+    }
+    setDragOverFolder(null);
+  };
+
   const renderFolderItem = (folder: any, level = 0) => {
     const hasChildren = folder.children && folder.children.length > 0;
     const isExpanded = expandedFolders.has(folder.id);
     const folderPath = `${basePath}?folder=${folder.id}`;
     const isActive = currentFolderId === folder.id;
+    const isDraggedOver = dragOverFolder === folder.id;
 
     return (
       <div key={folder.id}>
@@ -48,9 +70,11 @@ export default function FolderNavigation({ type, isCollapsed, basePath, onDelete
               ? `${THEME_COLORS.sidebar.nav.item.active.background} ${THEME_COLORS.sidebar.nav.item.active.text}` 
               : `${THEME_COLORS.sidebar.nav.item.text} ${THEME_COLORS.sidebar.nav.item.textHover} ${THEME_COLORS.sidebar.nav.item.background}`
             }
+            ${isDraggedOver ? 'bg-blue-500/20 border-2 border-blue-500 border-dashed' : ''}
             ${THEME_COLORS.transitions.default} rounded-lg
           `}
           style={{ marginLeft: `${level * 16}px` }}
+          data-drop-folder-id={folder.id}
         >
           {/* Expand/Collapse button */}
           {hasChildren && !isCollapsed && (

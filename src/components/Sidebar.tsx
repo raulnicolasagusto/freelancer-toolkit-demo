@@ -13,7 +13,8 @@ import {
   ChevronRight,
   LayoutDashboard,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Home
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { THEME_COLORS } from '@/lib/theme-colors';
@@ -22,7 +23,7 @@ import { useUser, SignOutButton } from '@clerk/nextjs';
 import { LogOut } from 'lucide-react';
 import FolderNavigation from './FolderNavigation';
 import DeleteConfirmModal from './DeleteConfirmModal';
-import { deleteFolder, type Folder } from '@/lib/snippets';
+import { deleteFolder, updateSnippet, type Folder, type Snippet } from '@/lib/snippets';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -144,6 +145,27 @@ export function Sidebar({ className }: SidebarProps) {
     if (!isDeleting) {
       setShowDeleteModal(false);
       setFolderToDelete(null);
+    }
+  };
+
+  const handleMoveSnippet = async (snippetId: string, targetFolderId: string) => {
+    try {
+      const updatedSnippet = await updateSnippet(snippetId, {
+        folder_id: targetFolderId === 'root' ? null : targetFolderId
+      });
+      
+      if (updatedSnippet) {
+        toast.success('Snippet movido correctamente');
+        // Disparar evento personalizado para que la página de snippets se actualice
+        window.dispatchEvent(new CustomEvent('snippet-moved', { 
+          detail: { snippetId, targetFolderId } 
+        }));
+      } else {
+        toast.error('Error al mover el snippet');
+      }
+    } catch (error) {
+      console.error('Error moving snippet:', error);
+      toast.error('Error al mover el snippet');
     }
   };
 
@@ -360,11 +382,25 @@ export function Sidebar({ className }: SidebarProps) {
                   transition={{ duration: 0.2 }}
                   className="mt-2"
                 >
+                  {/* Root folder drop zone */}
+                  <div
+                    className={`
+                      flex items-center space-x-3 px-3 py-2 rounded-lg mb-2
+                      ${THEME_COLORS.sidebar.nav.item.text} ${THEME_COLORS.sidebar.nav.item.textHover} ${THEME_COLORS.sidebar.nav.item.background}
+                      ${THEME_COLORS.transitions.default}
+                    `}
+                    data-drop-folder-id="root"
+                  >
+                    <Home size={16} className={THEME_COLORS.icons.snippets} />
+                    <span className="text-sm font-medium">Mis Snippets (Raíz)</span>
+                  </div>
+
                   <FolderNavigation 
                     type="snippets" 
                     isCollapsed={false}
                     basePath="/snippets"
                     onDeleteFolder={handleDeleteFolder}
+                    onDropSnippet={handleMoveSnippet}
                   />
                 </motion.div>
               )}
