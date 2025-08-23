@@ -116,6 +116,8 @@ interface SnippetCardProps {
 
 function SnippetCard({ snippet, onClick, onDelete, isDragging, onDragStart, onDragEnd, onDragStartVisual, onDragEndVisual }: SnippetCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [hasMoved, setHasMoved] = useState(false);
 
   // Obtener las primeras 4 líneas del código
   const previewLines = snippet.code.split('\n').slice(0, 4);
@@ -130,8 +132,28 @@ function SnippetCard({ snippet, onClick, onDelete, isDragging, onDragStart, onDr
       }}
       onMouseDown={(e) => {
         if (e.button === 0) { // Solo botón izquierdo
-          onDragStartVisual(snippet.id, e.clientX, e.clientY);
-          onDragStart(snippet.id);
+          setStartPos({ x: e.clientX, y: e.clientY });
+          setHasMoved(false);
+          
+          // Solo iniciar drag si se mueve más de 5px
+          const handleMouseMove = (moveEvent: MouseEvent) => {
+            const deltaX = Math.abs(moveEvent.clientX - e.clientX);
+            const deltaY = Math.abs(moveEvent.clientY - e.clientY);
+            
+            if ((deltaX > 5 || deltaY > 5) && !hasMoved) {
+              setHasMoved(true);
+              onDragStartVisual(snippet.id, moveEvent.clientX, moveEvent.clientY);
+              onDragStart(snippet.id);
+            }
+          };
+          
+          const handleMouseUp = () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+          };
+          
+          document.addEventListener('mousemove', handleMouseMove);
+          document.addEventListener('mouseup', handleMouseUp);
         }
       }}
       className={`
@@ -146,7 +168,13 @@ function SnippetCard({ snippet, onClick, onDelete, isDragging, onDragStart, onDr
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => !isDragging && onClick(snippet.id)}
+      onClick={(e) => {
+        // Solo abrir si no se movió (no fue drag)
+        if (!hasMoved && !isDragging) {
+          onClick(snippet.id);
+        }
+        e.stopPropagation();
+      }}
       style={{
         cursor: isDragging ? 'grabbing' : 'grab'
       }}
