@@ -1576,7 +1576,7 @@ module.exports = app;`
         </div>
 
         {/* Code Editor */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-auto">
           <CodeMirrorEditor
             value={currentTab.code}
             language={currentTab.language}
@@ -1600,7 +1600,7 @@ module.exports = app;`
           </p>
         </div>
         
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-4 overflow-auto">
           {isEditingObservations ? (
             <textarea
               value={observations}
@@ -1609,7 +1609,7 @@ module.exports = app;`
               className={`
                 w-full h-full resize-none bg-transparent border-none outline-none
                 ${isEditorDarkMode ? 'text-white' : THEME_COLORS.dashboard.title}
-                focus:ring-2 focus:ring-blue-500/20 rounded-lg p-2
+                focus:ring-2 focus:ring-blue-500/20 rounded-lg p-2 overflow-auto
               `}
               placeholder="Agrega tus observaciones aquí..."
               autoFocus

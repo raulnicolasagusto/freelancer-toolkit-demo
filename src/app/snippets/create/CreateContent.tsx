@@ -36,6 +36,7 @@ export default function CreateContent() {
   const [isEditorDarkMode, setIsEditorDarkMode] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
     if (editId) {
@@ -154,9 +155,14 @@ export default function CreateContent() {
   };
 
   const handleBack = () => {
-    // Regresar a la carpeta correcta donde estaba el snippet/markdown
-    const folderParam = selectedFolderId ? `?folder=${selectedFolderId}` : '';
-    router.push(`/snippets${folderParam}`);
+    // Activar efecto de salida estilo macOS
+    setIsExiting(true);
+    
+    // Después del efecto, navegar
+    setTimeout(() => {
+      const folderParam = selectedFolderId ? `?folder=${selectedFolderId}` : '';
+      router.push(`/snippets${folderParam}`);
+    }, 300); // Duración del efecto
   };
 
   const handleCopyContent = async () => {
@@ -227,8 +233,21 @@ export default function CreateContent() {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      animate={isExiting ? { 
+        opacity: 0, 
+        scale: 0.95, 
+        y: -10,
+        filter: "blur(2px)"
+      } : { 
+        opacity: 1, 
+        y: 0, 
+        scale: 1,
+        filter: "blur(0px)"
+      }}
+      transition={{ 
+        duration: 0.3,
+        ease: [0.4, 0.0, 0.2, 1] // Bezier curve similar a macOS
+      }}
       className="h-full flex flex-col"
     >
       {/* Header */}
@@ -380,7 +399,7 @@ export default function CreateContent() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0">
         {(isEditing ? snippetType : type) === 'markdown' ? (
           <MarkdownEditor 
             showPreview={showPreview}
@@ -389,6 +408,8 @@ export default function CreateContent() {
             initialContent={content}
             isEditorDarkMode={isEditorDarkMode}
             onThemeChange={setIsEditorDarkMode}
+            onObservationsChange={setObservations}
+            initialObservations={observations}
           />
         ) : (
           <SnippetEditor 

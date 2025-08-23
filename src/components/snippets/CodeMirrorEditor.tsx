@@ -122,12 +122,27 @@ export default function CodeMirrorEditor({ value, language, onChange, isDarkMode
   const theme = isDarkModeActive ? oneDark : lightTheme;
 
   return (
-    <div className="h-full overflow-hidden">
+    <div className="h-full">
       <CodeMirror
         value={value}
-        height="100%"
+        height="70vh"
         theme={theme}
-        extensions={extensions}
+        extensions={[...extensions, EditorView.theme({
+          '&': {
+            height: '100%'
+          },
+          '.cm-scroller': {
+            overflow: 'auto',
+            maxHeight: '100%'
+          },
+          '.cm-content': {
+            minHeight: '100%',
+            padding: '16px'
+          },
+          '.cm-editor': {
+            height: '100%'
+          }
+        })]}
         onChange={(val) => onChange(val)}
         basicSetup={{
           lineNumbers: true,

@@ -19,12 +19,16 @@ interface MarkdownEditorProps {
   initialContent?: string;
   isEditorDarkMode?: boolean;
   onThemeChange?: (isDark: boolean) => void;
+  onObservationsChange: (observations: string) => void;
+  initialObservations?: string;
 }
 
-export default function MarkdownEditor({ showPreview, onTitleChange, onContentChange, initialContent, isEditorDarkMode: propIsEditorDarkMode, onThemeChange }: MarkdownEditorProps) {
+export default function MarkdownEditor({ showPreview, onTitleChange, onContentChange, initialContent, isEditorDarkMode: propIsEditorDarkMode, onThemeChange, onObservationsChange, initialObservations }: MarkdownEditorProps) {
   const isInitialized = useRef(false);
   const [systemDarkMode, setSystemDarkMode] = useState(false);
   const [localIsEditorDarkMode, setLocalIsEditorDarkMode] = useState(true);
+  const [observations, setObservations] = useState('Agrega aquí tus observaciones sobre este markdown...');
+  const [isEditingObservations, setIsEditingObservations] = useState(false);
   
   const isEditorDarkMode = propIsEditorDarkMode !== undefined ? propIsEditorDarkMode : localIsEditorDarkMode;
   const [content, setContent] = useState(`# Bienvenido a tu Markdown
@@ -89,6 +93,18 @@ console.log(saludar('Usuario'));
     }
   }, [initialContent]);
 
+  // Load initial observations if provided
+  useEffect(() => {
+    if (initialObservations) {
+      setObservations(initialObservations);
+    }
+  }, [initialObservations]);
+
+  // Pass observations to parent
+  useEffect(() => {
+    onObservationsChange(observations);
+  }, [observations, onObservationsChange]);
+
   useEffect(() => {
     // Extract title from first h1 in content (solo si no hay contenido inicial)
     if (!isInitialized.current) {
@@ -138,44 +154,12 @@ console.log(saludar('Usuario'));
   const theme = isEditorDarkMode ? oneDark : lightTheme;
 
   return (
-    <div className={`h-full ${isEditorDarkMode ? 'bg-gray-900' : THEME_COLORS.main.background}`}>
-      {/* Header with toggle */}
-      <div className={`
-        ${isEditorDarkMode ? 'bg-gray-800 border-gray-700' : `${THEME_COLORS.dashboard.card.background} border-b ${THEME_COLORS.dashboard.card.border}`}
-        p-4 flex items-center justify-between
-      `}>
-        <div className="flex items-center space-x-4">
-          <span className={`text-sm font-medium ${isEditorDarkMode ? 'text-gray-300' : THEME_COLORS.dashboard.subtitle}`}>
-            Editor de Markdown
-          </span>
-        </div>
-        
-        <button
-          onClick={() => {
-            const newTheme = !isEditorDarkMode;
-            if (onThemeChange) {
-              onThemeChange(newTheme);
-            } else {
-              setLocalIsEditorDarkMode(newTheme);
-            }
-          }}
-          className={`
-            p-2 rounded-lg transition-all duration-200
-            ${isEditorDarkMode 
-              ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }
-          `}
-          title={isEditorDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-        >
-          {isEditorDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-      </div>
-
-      <div className="flex-1 p-4">
+    <div className={`h-full flex ${isEditorDarkMode ? 'bg-gray-900' : THEME_COLORS.main.background}`}>
+      {/* Main Editor Area */}
+      <div className="flex-1 p-4 min-h-0">
         <div className={`
           h-full rounded-lg border ${isEditorDarkMode ? 'border-gray-700 bg-gray-800' : `${THEME_COLORS.dashboard.card.border} ${THEME_COLORS.dashboard.card.background}`}
-          overflow-hidden flex
+          flex
         `}>
           {showPreview ? (
             // Preview Mode
@@ -191,14 +175,25 @@ console.log(saludar('Usuario'));
             </div>
           ) : (
             // Edit Mode - Now using CodeMirror
-            <div className="flex-1 flex flex-col">
-              <div className="flex-1 overflow-hidden">
-                <CodeMirror
-                  value={content}
-                  height="100%"
-                  theme={theme}
-                  extensions={[markdown()]}
-                  onChange={(val) => setContent(val)}
+            <div className="flex-1">
+              <CodeMirror
+                value={content}
+                height="70vh"
+                theme={theme}
+                extensions={[markdown(), EditorView.theme({
+                  '&': {
+                    height: '100%'
+                  },
+                  '.cm-scroller': {
+                    overflow: 'auto',
+                    maxHeight: '100%'
+                  },
+                  '.cm-content': {
+                    minHeight: '100%',
+                    padding: '16px'
+                  }
+                })]}
+                onChange={(val) => setContent(val)}
                   basicSetup={{
                     lineNumbers: true,
                     foldGutter: false,
@@ -229,7 +224,50 @@ Escribe tu contenido en markdown aquí...
 console.log('Hello World');
 ```"
                 />
-              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Observations Panel */}
+      <div className={`
+        w-80 border-l ${isEditorDarkMode ? 'border-gray-700 bg-gray-800' : `${THEME_COLORS.dashboard.card.border} ${THEME_COLORS.dashboard.card.background}`}
+        flex flex-col
+      `}>
+        <div className={`p-4 border-b ${isEditorDarkMode ? 'border-gray-700' : THEME_COLORS.dashboard.card.border}`}>
+          <h3 className={`font-semibold ${isEditorDarkMode ? 'text-white' : THEME_COLORS.dashboard.title}`}>
+            Observaciones
+          </h3>
+          <p className={`text-sm ${isEditorDarkMode ? 'text-gray-400' : THEME_COLORS.dashboard.metadata} mt-1`}>
+            Agrega notas sobre este markdown
+          </p>
+        </div>
+        
+        <div className="flex-1 p-4 overflow-auto">
+          {isEditingObservations ? (
+            <textarea
+              value={observations}
+              onChange={(e) => setObservations(e.target.value)}
+              onBlur={() => setIsEditingObservations(false)}
+              className={`
+                w-full h-full resize-none bg-transparent border-none outline-none
+                ${isEditorDarkMode ? 'text-white' : THEME_COLORS.dashboard.title}
+                focus:ring-2 focus:ring-blue-500/20 rounded-lg p-2 overflow-auto
+              `}
+              placeholder="Agrega tus observaciones aquí..."
+              autoFocus
+            />
+          ) : (
+            <div
+              onClick={() => setIsEditingObservations(true)}
+              className={`
+                h-full cursor-text p-2 rounded-lg
+                ${observations.includes('Agrega aquí') ? (isEditorDarkMode ? 'text-gray-500' : THEME_COLORS.dashboard.metadata) : (isEditorDarkMode ? 'text-gray-300' : THEME_COLORS.dashboard.subtitle)}
+                ${isEditorDarkMode ? 'hover:bg-gray-700' : 'hover:bg-slate-50'}
+                ${THEME_COLORS.transitions.all}
+              `}
+            >
+              {observations}
             </div>
           )}
         </div>
