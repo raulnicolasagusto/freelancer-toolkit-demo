@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import CreateModal from '@/components/snippets/CreateModal';
 import FolderCreateModal from '@/components/FolderCreateModal';
 import DeleteConfirmModal from '@/components/DeleteConfirmModal';
-import { getSnippets, getFolders, deleteSnippet, type Snippet, type Folder } from '@/lib/snippets';
+import { getSnippets, getFolders, deleteSnippet, updateFolder, type Snippet, type Folder } from '@/lib/snippets';
 import { useAuth, useUser } from '@clerk/nextjs';
 import toast from 'react-hot-toast';
 
@@ -215,6 +215,8 @@ export default function SnippetsPage() {
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditingFolderName, setIsEditingFolderName] = useState(false);
+  const [editingFolderName, setEditingFolderName] = useState('');
 
   useEffect(() => {
     loadSnippets();
@@ -309,6 +311,38 @@ export default function SnippetsPage() {
     setShowCreateModal(true);
   };
 
+  const handleEditFolderName = () => {
+    if (currentFolder) {
+      setEditingFolderName(currentFolder.name);
+      setIsEditingFolderName(true);
+    }
+  };
+
+  const handleSaveFolderName = async () => {
+    if (!currentFolder || !editingFolderName.trim()) {
+      setIsEditingFolderName(false);
+      return;
+    }
+
+    try {
+      const updatedFolder = await updateFolder(currentFolder.id, {
+        name: editingFolderName.trim()
+      });
+      
+      if (updatedFolder) {
+        setCurrentFolder(updatedFolder);
+        toast.success('Nombre de carpeta actualizado');
+      } else {
+        toast.error('Error al actualizar el nombre');
+      }
+    } catch (error) {
+      console.error('Error updating folder name:', error);
+      toast.error('Error al actualizar el nombre');
+    } finally {
+      setIsEditingFolderName(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="max-w-7xl mx-auto">
@@ -324,9 +358,41 @@ export default function SnippetsPage() {
                   <FolderIcon size={18} style={{ color: currentFolder.color }} />
                 </div>
                 <div>
-                  <h1 className={`text-3xl font-bold ${THEME_COLORS.dashboard.title}`}>
-                    {currentFolder.name}
-                  </h1>
+                  {isEditingFolderName ? (
+                    <input
+                      type="text"
+                      value={editingFolderName}
+                      onChange={(e) => setEditingFolderName(e.target.value)}
+                      onBlur={handleSaveFolderName}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSaveFolderName();
+                        }
+                        if (e.key === 'Escape') {
+                          setIsEditingFolderName(false);
+                        }
+                      }}
+                      className={`
+                        text-3xl font-bold bg-transparent border-none outline-none
+                        ${THEME_COLORS.dashboard.title}
+                        border-b-2 border-blue-500 pb-1
+                      `}
+                      autoFocus
+                      maxLength={30}
+                    />
+                  ) : (
+                    <h1 
+                      onClick={handleEditFolderName}
+                      className={`
+                        text-3xl font-bold cursor-pointer
+                        ${THEME_COLORS.dashboard.title}
+                        hover:opacity-80 transition-opacity
+                      `}
+                      title="Hacer click para editar"
+                    >
+                      {currentFolder.name}
+                    </h1>
+                  )}
                   <p className={`text-sm ${THEME_COLORS.dashboard.subtitle}`}>
                     Carpeta de {t('snippets.pageTitle')}
                   </p>
