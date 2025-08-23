@@ -25,6 +25,7 @@ interface MarkdownEditorProps {
 
 export default function MarkdownEditor({ showPreview, onTitleChange, onContentChange, initialContent, isEditorDarkMode: propIsEditorDarkMode, onThemeChange, onObservationsChange, initialObservations }: MarkdownEditorProps) {
   const isInitialized = useRef(false);
+  const isObservationsInitialized = useRef(false);
   const [systemDarkMode, setSystemDarkMode] = useState(false);
   const [localIsEditorDarkMode, setLocalIsEditorDarkMode] = useState(true);
   const [observations, setObservations] = useState('Agrega aquí tus observaciones sobre este markdown...');
@@ -93,17 +94,18 @@ console.log(saludar('Usuario'));
     }
   }, [initialContent]);
 
-  // Load initial observations if provided
+  // Load initial observations if provided (solo una vez)
   useEffect(() => {
-    if (initialObservations) {
+    if (initialObservations && !isObservationsInitialized.current) {
       setObservations(initialObservations);
+      isObservationsInitialized.current = true;
     }
   }, [initialObservations]);
 
-  // Pass observations to parent
+  // Pass observations to parent (sin incluir la función en dependencias para evitar bucle)
   useEffect(() => {
     onObservationsChange(observations);
-  }, [observations, onObservationsChange]);
+  }, [observations]);
 
   useEffect(() => {
     // Extract title from first h1 in content (solo si no hay contenido inicial)
@@ -164,7 +166,7 @@ console.log(saludar('Usuario'));
           {showPreview ? (
             // Preview Mode
             <div className="flex-1 overflow-y-auto p-6">
-              <div className={`prose ${isEditorDarkMode ? 'prose-invert' : 'prose-slate'} max-w-none ${isEditorDarkMode ? 'text-gray-100' : THEME_COLORS.dashboard.title}`}>
+              <div className={`prose ${isEditorDarkMode ? 'prose-invert' : 'prose-slate'} max-w-none ${isEditorDarkMode ? 'text-gray-100' : THEME_COLORS.dashboard.title} break-words overflow-wrap-anywhere`}>
                 <ReactMarkdown
                   remarkPlugins={[remarkMath]}
                   rehypePlugins={[rehypeKatex]}
@@ -180,19 +182,24 @@ console.log(saludar('Usuario'));
                 value={content}
                 height="70vh"
                 theme={theme}
-                extensions={[markdown(), EditorView.theme({
-                  '&': {
-                    height: '100%'
-                  },
-                  '.cm-scroller': {
-                    overflow: 'auto',
-                    maxHeight: '100%'
-                  },
-                  '.cm-content': {
-                    minHeight: '100%',
-                    padding: '16px'
-                  }
-                })]}
+                extensions={[
+                  markdown(), 
+                  EditorView.lineWrapping,
+                  EditorView.theme({
+                    '&': {
+                      height: '100%'
+                    },
+                    '.cm-scroller': {
+                      overflow: 'auto',
+                      maxHeight: '100%'
+                    },
+                    '.cm-content': {
+                      minHeight: '100%',
+                      padding: '16px'
+                    }
+                  })
+                ]}
+              
                 onChange={(val) => setContent(val)}
                   basicSetup={{
                     lineNumbers: true,
@@ -261,7 +268,7 @@ console.log('Hello World');
             <div
               onClick={() => setIsEditingObservations(true)}
               className={`
-                h-full cursor-text p-2 rounded-lg
+                h-full cursor-text p-2 rounded-lg break-words overflow-wrap-anywhere
                 ${observations.includes('Agrega aquí') ? (isEditorDarkMode ? 'text-gray-500' : THEME_COLORS.dashboard.metadata) : (isEditorDarkMode ? 'text-gray-300' : THEME_COLORS.dashboard.subtitle)}
                 ${isEditorDarkMode ? 'hover:bg-gray-700' : 'hover:bg-slate-50'}
                 ${THEME_COLORS.transitions.all}

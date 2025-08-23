@@ -37,11 +37,13 @@ export default function CreateContent() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [currentEditId, setCurrentEditId] = useState<string | null>(editId);
 
   useEffect(() => {
     if (editId) {
       // Modo edición - cargar datos del snippet
       setIsEditing(true);
+      setCurrentEditId(editId);
       loadSnippetData();
     } else if (!type || !['markdown', 'snippet'].includes(type)) {
       // Modo creación - verificar tipo válido
@@ -50,12 +52,12 @@ export default function CreateContent() {
   }, [type, editId, router]);
 
   const loadSnippetData = async () => {
-    if (!editId || !userId) return;
+    if (!currentEditId || !userId) return;
 
     setLoading(true);
     try {
       const userEmail = user?.primaryEmailAddress?.emailAddress || '';
-      const snippet = await getSnippetById(editId, userId, userEmail);
+      const snippet = await getSnippetById(currentEditId, userId, userEmail);
       
       if (snippet) {
         setTitle(snippet.title);
@@ -112,7 +114,7 @@ export default function CreateContent() {
     }
 
     try {
-      const snippetType = isEditing ? (editId ? await getSnippetById(editId, userId) : null)?.type || 'snippet' : type as 'snippet' | 'markdown';
+      const snippetType = isEditing ? (currentEditId ? await getSnippetById(currentEditId, userId) : null)?.type || 'snippet' : type as 'snippet' | 'markdown';
       
       const snippetData = {
         title: title.trim(),
@@ -134,8 +136,8 @@ export default function CreateContent() {
       console.log(isEditing ? 'Updating snippet:' : 'Saving snippet:', snippetData);
       
       let savedSnippet;
-      if (isEditing && editId) {
-        savedSnippet = await updateSnippet(editId, snippetData);
+      if (isEditing && currentEditId) {
+        savedSnippet = await updateSnippet(currentEditId, snippetData);
       } else {
         savedSnippet = await createSnippet(snippetData, userId);
       }
@@ -146,6 +148,20 @@ export default function CreateContent() {
         const action = isEditing ? 'actualizado' : 'creado';
         const type = snippetType === 'markdown' ? 'Markdown' : 'Snippet';
         toast.success(`${type} ${action} exitosamente`);
+        
+        // Si era un snippet nuevo (modo creación), cambiar a modo edición
+        if (!isEditing) {
+          setIsEditing(true);
+          setCurrentEditId(savedSnippet.id);
+          // Actualizar la URL para reflejar que ahora estamos editando
+          const newUrl = `/snippets/create?type=${snippetType}&edit=${savedSnippet.id}`;
+          window.history.replaceState({}, '', newUrl);
+        }
+        
+        // Actualizar estados locales
+        setSelectedFolderId(folderId);
+        setSnippetType(snippetType);
+        
         // No redirigir, quedarse en el editor
       }
     } catch (error) {
@@ -188,17 +204,17 @@ export default function CreateContent() {
   };
 
   const handleDeleteRequest = () => {
-    if (isEditing && editId) {
+    if (isEditing && currentEditId) {
       setShowDeleteModal(true);
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (!editId) return;
+    if (!currentEditId) return;
 
     setIsDeleting(true);
     try {
-      const success = await deleteSnippet(editId);
+      const success = await deleteSnippet(currentEditId);
       
       if (success) {
         const itemType = snippetType === 'markdown' ? 'Markdown' : 'Snippet';
