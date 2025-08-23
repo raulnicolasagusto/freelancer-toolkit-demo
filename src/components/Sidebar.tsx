@@ -382,18 +382,11 @@ export function Sidebar({ className }: SidebarProps) {
                   transition={{ duration: 0.2 }}
                   className="mt-2"
                 >
-                  {/* Root folder drop zone */}
+                  {/* Zona invisible para drop en raíz */}
                   <div
-                    className={`
-                      flex items-center space-x-3 px-3 py-2 rounded-lg mb-2
-                      ${THEME_COLORS.sidebar.nav.item.text} ${THEME_COLORS.sidebar.nav.item.textHover} ${THEME_COLORS.sidebar.nav.item.background}
-                      ${THEME_COLORS.transitions.default}
-                    `}
+                    className="absolute inset-0 pointer-events-auto"
                     data-drop-folder-id="root"
-                  >
-                    <Home size={16} className={THEME_COLORS.icons.snippets} />
-                    <span className="text-sm font-medium">Mis Snippets (Raíz)</span>
-                  </div>
+                  ></div>
 
                   <FolderNavigation 
                     type="snippets" 
