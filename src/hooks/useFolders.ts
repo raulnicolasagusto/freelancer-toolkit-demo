@@ -41,6 +41,25 @@ export function useFolders(type: 'snippets' | 'notes') {
     loadFolders();
   }, [type, userId]);
 
+  useEffect(() => {
+    // Escuchar eventos de carpetas creadas y eliminadas
+    const handleFolderCreated = () => {
+      loadFolders();
+    };
+
+    const handleFolderDeleted = () => {
+      loadFolders();
+    };
+
+    window.addEventListener('folder-created', handleFolderCreated);
+    window.addEventListener('folder-deleted', handleFolderDeleted);
+    
+    return () => {
+      window.removeEventListener('folder-created', handleFolderCreated);
+      window.removeEventListener('folder-deleted', handleFolderDeleted);
+    };
+  }, []);
+
   return {
     folders,
     folderTree,

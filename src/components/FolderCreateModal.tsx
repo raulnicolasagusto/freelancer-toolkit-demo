@@ -72,6 +72,11 @@ export default function FolderCreateModal({ isOpen, onClose, type, parentFolderI
       setFolderName('');
       setSelectedColor(FOLDER_COLORS[0]);
       
+      // Disparar evento personalizado para actualizar carpetas dinámicamente
+      window.dispatchEvent(new CustomEvent('folder-created', { 
+        detail: { folderName: folderName.trim(), type, parentFolderId } 
+      }));
+
       // Close modal and notify parent
       onClose();
       if (onFolderCreated) {

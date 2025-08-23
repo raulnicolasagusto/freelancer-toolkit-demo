@@ -127,22 +127,26 @@ export default function CodeMirrorEditor({ value, language, onChange, isDarkMode
         value={value}
         height="70vh"
         theme={theme}
-        extensions={[...extensions, EditorView.theme({
-          '&': {
-            height: '100%'
-          },
-          '.cm-scroller': {
-            overflow: 'auto',
-            maxHeight: '100%'
-          },
-          '.cm-content': {
-            minHeight: '100%',
-            padding: '16px'
-          },
-          '.cm-editor': {
-            height: '100%'
-          }
-        })]}
+        extensions={[
+          ...extensions, 
+          EditorView.lineWrapping,
+          EditorView.theme({
+            '&': {
+              height: '100%'
+            },
+            '.cm-scroller': {
+              overflow: 'auto',
+              maxHeight: '100%'
+            },
+            '.cm-content': {
+              minHeight: '100%',
+              padding: '16px'
+            },
+            '.cm-editor': {
+              height: '100%'
+            }
+          })
+        ]}
         onChange={(val) => onChange(val)}
         basicSetup={{
           lineNumbers: true,

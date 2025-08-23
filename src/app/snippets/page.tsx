@@ -5,7 +5,7 @@ import { THEME_COLORS } from '@/lib/theme-colors';
 import { Plus, Trash2, Edit3, Folder as FolderIcon, Home, FolderPlus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import CreateModal from '@/components/snippets/CreateModal';
 import FolderCreateModal from '@/components/FolderCreateModal';
 import DeleteConfirmModal from '@/components/DeleteConfirmModal';
@@ -253,6 +253,7 @@ function SnippetCard({ snippet, onClick, onDelete, isDragging, onDragStart, onDr
 export default function SnippetsPage() {
   const { userId } = useAuth();
   const { user } = useUser();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const currentFolderId = searchParams.get('folder');
   
@@ -288,12 +289,26 @@ export default function SnippetsPage() {
       setSnippets(prev => prev.filter(s => s.id !== snippetId));
     };
 
+    // Escuchar eventos de carpetas eliminadas
+    const handleFolderDeleted = (event: CustomEvent) => {
+      const { folderId } = event.detail;
+      // Si estamos viendo la carpeta que se eliminó, volver a la vista principal
+      if (currentFolderId === folderId) {
+        router.push('/snippets');
+      } else {
+        // Solo recargar datos si no estamos en la carpeta eliminada
+        loadSnippets();
+      }
+    };
+
     window.addEventListener('snippet-moved', handleSnippetMoved as EventListener);
+    window.addEventListener('folder-deleted', handleFolderDeleted as EventListener);
     
     return () => {
       window.removeEventListener('snippet-moved', handleSnippetMoved as EventListener);
+      window.removeEventListener('folder-deleted', handleFolderDeleted as EventListener);
     };
-  }, []);
+  }, [currentFolderId, router]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -391,8 +406,9 @@ export default function SnippetsPage() {
   };
 
   const handleSnippetClick = (id: string) => {
-    // Navegar a la página de crear/editar con el ID del snippet
-    window.location.href = `/snippets/create?edit=${id}`;
+    // Navegar a la página de crear/editar con el ID del snippet usando router
+    const folderParam = currentFolderId ? `&folder=${currentFolderId}` : '';
+    router.push(`/snippets/create?edit=${id}${folderParam}`);
   };
 
   const handleDeleteRequest = (id: string) => {
@@ -707,10 +723,10 @@ export default function SnippetsPage() {
         parentFolderName={currentFolder?.name}
         onFolderCreated={() => {
           setShowFolderCreateModal(false);
-          // Refrescar después de un pequeño delay para que se vea el toast
+          // Recargar datos dinámicamente sin recargar la página
           setTimeout(() => {
-            window.location.reload();
-          }, 1000);
+            loadSnippets();
+          }, 500);
         }}
       />
 

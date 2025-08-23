@@ -128,8 +128,10 @@ export function Sidebar({ className }: SidebarProps) {
         toast.success(`Carpeta "${folderToDelete.name}" eliminada exitosamente`);
         setShowDeleteModal(false);
         setFolderToDelete(null);
-        // Recargar la página para actualizar la lista de carpetas
-        window.location.reload();
+        // Disparar evento personalizado para actualizar las carpetas dinámicamente
+        window.dispatchEvent(new CustomEvent('folder-deleted', { 
+          detail: { folderId: folderToDelete.id, folderName: folderToDelete.name } 
+        }));
       } else {
         toast.error('Error al eliminar la carpeta. Intenta nuevamente.');
       }
