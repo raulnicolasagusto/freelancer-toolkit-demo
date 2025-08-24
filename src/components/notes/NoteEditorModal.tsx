@@ -18,6 +18,7 @@ import {
   Italic,
   Underline
 } from 'lucide-react';
+import ReminderMenu from './ReminderMenu';
 
 interface NoteEditorModalProps {
   isOpen: boolean;
@@ -28,6 +29,9 @@ interface NoteEditorModalProps {
     content: string;
     color: string;
     type: 'text' | 'list' | 'image';
+    reminder_date?: string;
+    reminder_time?: string;
+    reminder_location?: string;
   };
   onSave: (noteData: {
     id: string;
@@ -37,6 +41,9 @@ interface NoteEditorModalProps {
     type: 'text';
     isPinned: boolean;
     createdAt: string;
+    reminder_date?: string;
+    reminder_time?: string;
+    reminder_location?: string;
   }) => void;
 }
 
@@ -118,7 +125,13 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
   const [selectedColor, setSelectedColor] = useState(note?.color || COLOR_PALETTE[0]);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showFormatMenu, setShowFormatMenu] = useState(false);
+  const [showReminderMenu, setShowReminderMenu] = useState(false);
   const [activeFormats, setActiveFormats] = useState<string[]>([]);
+  const [reminderData, setReminderData] = useState({
+    date: note?.reminder_date || '',
+    time: note?.reminder_time || '',
+    location: note?.reminder_location || ''
+  });
   
   const titleRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -133,6 +146,11 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
       setTitle(initialTitle);
       setContent(initialContent);
       setSelectedColor(initialColor);
+      setReminderData({
+        date: note?.reminder_date || '',
+        time: note?.reminder_time || '',
+        location: note?.reminder_location || ''
+      });
       
       // Establecer contenido en el div editable
       if (contentRef.current) {
@@ -172,6 +190,9 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
       isPinned: false,
       createdAt: new Date().toISOString(),
       folder_id: null, // Agregar esta propiedad que falta
+      reminder_date: reminderData.date || undefined,
+      reminder_time: reminderData.time || undefined,
+      reminder_location: reminderData.location || undefined,
     };
     
     console.log('Calling onSave with noteData:', noteData);
@@ -190,14 +211,17 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
       case 'format':
         setShowFormatMenu(!showFormatMenu);
         setShowColorPicker(false);
+        setShowReminderMenu(false);
         break;
       case 'background':
         setShowColorPicker(!showColorPicker);
         setShowFormatMenu(false);
+        setShowReminderMenu(false);
         break;
       case 'reminder':
-        // Implementar más adelante
-        console.log('Reminder clicked');
+        setShowReminderMenu(!showReminderMenu);
+        setShowColorPicker(false);
+        setShowFormatMenu(false);
         break;
       case 'pin':
         // Implementar más adelante
@@ -301,12 +325,18 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
     updateActiveFormats();
   };
 
+  const handleReminderSave = (newReminderData: { date: string; time: string; location: string }) => {
+    setReminderData(newReminderData);
+  };
+
   const handleClose = () => {
     setTitle('');
     setContent('');
     setSelectedColor(COLOR_PALETTE[0]);
     setShowColorPicker(false);
     setShowFormatMenu(false);
+    setShowReminderMenu(false);
+    setReminderData({ date: '', time: '', location: '' });
     onClose();
   };
 
@@ -473,6 +503,14 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
             )}
           </AnimatePresence>
 
+          {/* Reminder Menu Submenu */}
+          <ReminderMenu
+            isOpen={showReminderMenu}
+            onClose={() => setShowReminderMenu(false)}
+            onSave={handleReminderSave}
+            currentReminder={reminderData.date ? reminderData : undefined}
+          />
+
           {/* Toolbar */}
           <div className="border-t border-black/10 p-3">
             <div className="flex items-center justify-between">
@@ -480,14 +518,23 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
               <div className="flex items-center gap-1">
                 {TOOLBAR_BUTTONS.map((button) => {
                   const IconComponent = button.icon;
+                  const hasReminder = button.id === 'reminder' && reminderData.date && reminderData.time;
+                  
                   return (
                     <button
                       key={button.id}
                       onClick={() => handleToolbarClick(button.id)}
-                      className="p-2 hover:bg-black/10 rounded-full transition-colors relative group"
+                      className={`p-2 hover:bg-black/10 rounded-full transition-colors relative group ${
+                        hasReminder ? 'text-orange-500' : ''
+                      }`}
                       title={button.tooltip}
                     >
                       <IconComponent className="w-5 h-5" />
+                      
+                      {/* Indicator dot for active reminder */}
+                      {hasReminder && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full border-2 border-white"></div>
+                      )}
                       
                       {/* Tooltip */}
                       <div className={`
@@ -495,6 +542,11 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
                         ${button.id === 'more' || button.id === 'archive' ? 'right-0' : 'left-1/2 transform -translate-x-1/2'}
                       `}>
                         {button.tooltip}
+                        {hasReminder && (
+                          <div className="text-orange-300 mt-1">
+                            {new Date(reminderData.date).toLocaleDateString()} {reminderData.time}
+                          </div>
+                        )}
                       </div>
                     </button>
                   );

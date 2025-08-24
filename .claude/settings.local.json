@@ -5,7 +5,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
       "Bash(npm install:*)",
-      "mcp__supabase-local__execute_sql"
+      "mcp__supabase-local__execute_sql",
+      "mcp__supabase-local__apply_migration"
     ],
     "deny": [],
     "ask": []
