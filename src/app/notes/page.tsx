@@ -38,7 +38,7 @@ const EXAMPLE_NOTES = [
     type: 'image' as const,
     color: '#A7C8E0',
     isPinned: true,
-    imageUrl: '/api/placeholder/200/150',
+    imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTlmMmZmIi8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iNzUiIHI9IjMwIiBmaWxsPSIjYzNkZGZkIi8+PHRleHQgeD0iNTAlIiB5PSI4NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzMzNyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2VuIGRlIHBydWViYSAyPC90ZXh0Pjwvc3ZnPg==',
     createdAt: '2024-01-15',
     folder_id: null
   },
@@ -94,7 +94,7 @@ const EXAMPLE_NOTES = [
     type: 'image' as const,
     color: '#C8E6C9',
     isPinned: false,
-    imageUrl: '/api/placeholder/180/120',
+    imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmOWZmIi8+PGNpcmNsZSBjeD0iOTAiIGN5PSI2MCIgcj0iMjUiIGZpbGw9IiNiZGY0ZWEiLz48dGV4dCB4PSI1MCUiIHk9Ijg1JSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjMzc0MTUxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZW4gUHJ1ZWJhIDE8L3RleHQ+PC9zdmc+',
     createdAt: '2024-01-10',
     folder_id: null
   }
@@ -162,6 +162,17 @@ export default function NotesPage() {
   const pinnedNotes = folderFilteredNotes.filter(note => note.isPinned);
   const regularNotes = folderFilteredNotes.filter(note => !note.isPinned);
 
+  // Debug logging
+  console.log('Filter debug:', {
+    totalNotes: notes.length,
+    filteredNotes: filteredNotes.length,
+    folderFilteredNotes: folderFilteredNotes.length,
+    pinnedNotes: pinnedNotes.length,
+    regularNotes: regularNotes.length,
+    currentFolderId,
+    searchQuery
+  });
+
   // Cargar carpeta actual cuando cambie el parámetro
   useEffect(() => {
     if (currentFolderId && userId) {
@@ -198,15 +209,37 @@ export default function NotesPage() {
   };
 
   const handleSaveNote = (noteData: any) => {
+    console.log('handleSaveNote called with:', noteData);
+    console.log('editingNote:', editingNote);
+    
     if (editingNote) {
       // Actualizar nota existente
-      setNotes(prev => prev.map(note => 
-        note.id === editingNote.id ? { ...noteData } : note
-      ));
+      console.log('Updating existing note');
+      setNotes(prev => {
+        const updated = prev.map(note => 
+          note.id === editingNote.id ? { ...note, ...noteData } : note
+        );
+        console.log('Updated notes array:', updated);
+        return updated;
+      });
     } else {
-      // Crear nueva nota
-      setNotes(prev => [...prev, noteData]);
+      // Crear nueva nota - asegurar que tiene todas las propiedades requeridas
+      console.log('Creating new note');
+      const completeNote = {
+        ...noteData,
+        folder_id: noteData.folder_id || null,
+        createdAt: noteData.createdAt || new Date().toISOString(),
+      };
+      
+      setNotes(prev => {
+        const newNotes = [...prev, completeNote];
+        console.log('New notes array:', newNotes);
+        console.log('Total notes count:', newNotes.length);
+        return newNotes;
+      });
     }
+    
+    console.log('Closing modal and resetting editing state');
     setShowCreateModal(false);
     setEditingNote(null);
   };
@@ -561,7 +594,7 @@ function NoteCard({ note, index, masonry = false, onEdit, isDragging = false }: 
               alt="" 
               className="w-full h-full object-cover"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlbjwvdGV4dD48L3N2Zz4=';
+                (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iNzUiIHI9IjMwIiBmaWxsPSIjZDFkOWU2IiBzdHJva2U9IiNhYmI4YzMiIHN0cm9rZS13aWR0aD0iMiIgZmlsbC1vcGFjaXR5PSIwLjQiLz48Y2lyY2xlIGN4PSI5NSIgY3k9IjcwIiByPSI1IiBmaWxsPSIjZmZkNzAwIi8+PGVsbGlwc2UgY3g9IjEwMCIgY3k9Ijg1IiByeD0iMTUiIHJ5PSI4IiBmaWxsPSIjYWJiOGMzIi8+PHRleHQgeD0iNTAlIiB5PSIxMzUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2VuIG5vIGRpc3BvbmlibGU8L3RleHQ+PC9zdmc+';
               }}
             />
           </div>
@@ -578,9 +611,14 @@ function NoteCard({ note, index, masonry = false, onEdit, isDragging = false }: 
 
           {/* Contenido según tipo */}
           {note.type === 'text' && (
-            <p className="text-gray-700 text-sm whitespace-pre-line line-clamp-6">
-              {note.content}
-            </p>
+            <div 
+              className="text-gray-700 text-sm whitespace-pre-line line-clamp-6"
+              dangerouslySetInnerHTML={{ __html: note.content }}
+              style={{
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+            />
           )}
 
           {note.type === 'list' && note.listItems && (
@@ -606,9 +644,14 @@ function NoteCard({ note, index, masonry = false, onEdit, isDragging = false }: 
           )}
 
           {note.type === 'image' && note.content && (
-            <p className="text-gray-700 text-sm line-clamp-4">
-              {note.content}
-            </p>
+            <div 
+              className="text-gray-700 text-sm line-clamp-4"
+              dangerouslySetInnerHTML={{ __html: note.content }}
+              style={{
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+            />
           )}
         </div>
 

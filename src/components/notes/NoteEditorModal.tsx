@@ -18,7 +18,6 @@ import {
   Italic,
   Underline
 } from 'lucide-react';
-import { THEME_COLORS } from '@/lib/theme-colors';
 
 interface NoteEditorModalProps {
   isOpen: boolean;
@@ -30,7 +29,15 @@ interface NoteEditorModalProps {
     color: string;
     type: 'text' | 'list' | 'image';
   };
-  onSave: (noteData: any) => void;
+  onSave: (noteData: {
+    id: string;
+    title: string;
+    content: string;
+    color: string;
+    type: 'text';
+    isPinned: boolean;
+    createdAt: string;
+  }) => void;
 }
 
 // Paleta de colores predefinida
@@ -111,30 +118,71 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
   const [selectedColor, setSelectedColor] = useState(note?.color || COLOR_PALETTE[0]);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showFormatMenu, setShowFormatMenu] = useState(false);
-  const [activeFormat, setActiveFormat] = useState<string[]>([]);
+  const [activeFormats, setActiveFormats] = useState<string[]>([]);
   
   const titleRef = useRef<HTMLInputElement>(null);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen && titleRef.current) {
-      titleRef.current.focus();
+    if (isOpen) {
+      // Inicializar campos basado en si hay una nota para editar
+      const initialTitle = note?.title || '';
+      const initialContent = note?.content || '';
+      const initialColor = note?.color || COLOR_PALETTE[0];
+      
+      setTitle(initialTitle);
+      setContent(initialContent);
+      setSelectedColor(initialColor);
+      
+      // Establecer contenido en el div editable
+      if (contentRef.current) {
+        contentRef.current.innerHTML = initialContent;
+      }
+      
+      // Enfocar el campo de título
+      setTimeout(() => {
+        if (titleRef.current) {
+          titleRef.current.focus();
+        }
+      }, 100);
     }
-  }, [isOpen]);
+  }, [isOpen, note?.id]);
 
   const handleSave = () => {
+    console.log('handleSave called');
+    console.log('title:', title);
+    console.log('content:', content);
+    
+    // Permitir guardar si hay al menos título o contenido
+    const hasTitle = title.trim().length > 0;
+    const hasContent = content.trim().length > 0;
+    
+    if (!hasTitle && !hasContent) {
+      console.log('No content to save - both title and content are empty');
+      handleClose();
+      return;
+    }
+    
     const noteData = {
       id: note?.id || `note_${Date.now()}`,
-      title: title.trim(),
-      content: content.trim(),
+      title: hasTitle ? title.trim() : '',
+      content: hasContent ? content.trim() : '',
       color: selectedColor,
       type: 'text' as const,
       isPinned: false,
       createdAt: new Date().toISOString(),
+      folder_id: null, // Agregar esta propiedad que falta
     };
     
-    onSave(noteData);
-    onClose();
+    console.log('Calling onSave with noteData:', noteData);
+    
+    try {
+      onSave(noteData);
+      console.log('onSave completed successfully');
+      handleClose();
+    } catch (error) {
+      console.error('Error in onSave:', error);
+    }
   };
 
   const handleToolbarClick = (buttonId: string) => {
@@ -185,14 +233,72 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
   };
 
   const handleFormatClick = (format: string) => {
-    // Implementación básica de formato (sin editor rico por ahora)
-    console.log('Format clicked:', format);
+    if (!contentRef.current) return;
     
-    if (activeFormat.includes(format)) {
-      setActiveFormat(prev => prev.filter(f => f !== format));
-    } else {
-      setActiveFormat(prev => [...prev, format]);
+    // Asegurar que el div tenga foco
+    contentRef.current.focus();
+    
+    try {
+      let success = false;
+      
+      switch (format) {
+        case 'bold':
+          success = document.execCommand('bold', false, null);
+          break;
+        case 'italic':
+          success = document.execCommand('italic', false, null);
+          break;
+        case 'underline':
+          success = document.execCommand('underline', false, null);
+          break;
+        case 'h1':
+          success = document.execCommand('formatBlock', false, '<h1>');
+          break;
+        case 'h2':
+          success = document.execCommand('formatBlock', false, '<h2>');
+          break;
+        default:
+          return;
+      }
+      
+      // Actualizar el estado con el contenido HTML
+      setContent(contentRef.current.innerHTML);
+      
+      // Actualizar formatos activos
+      updateActiveFormats();
+      
+      console.log(`Format ${format} applied:`, success);
+      
+    } catch (error) {
+      console.error('Error applying format:', error);
     }
+  };
+
+  const updateActiveFormats = () => {
+    if (!contentRef.current) return;
+    
+    const formats = [];
+    
+    if (document.queryCommandState('bold')) formats.push('bold');
+    if (document.queryCommandState('italic')) formats.push('italic');
+    if (document.queryCommandState('underline')) formats.push('underline');
+    
+    // Verificar formatos de bloque
+    const formatBlock = document.queryCommandValue('formatBlock');
+    if (formatBlock === 'h1') formats.push('h1');
+    if (formatBlock === 'h2') formats.push('h2');
+    
+    setActiveFormats(formats);
+  };
+
+  const handleContentClick = () => {
+    // Actualizar formatos activos cuando se hace clic en el contenido
+    setTimeout(() => updateActiveFormats(), 10);
+  };
+
+  const handleContentKeyUp = () => {
+    // Actualizar formatos activos cuando se mueve el cursor
+    updateActiveFormats();
   };
 
   const handleClose = () => {
@@ -201,7 +307,6 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
     setSelectedColor(COLOR_PALETTE[0]);
     setShowColorPicker(false);
     setShowFormatMenu(false);
-    setActiveFormat([]);
     onClose();
   };
 
@@ -255,13 +360,16 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
             />
 
             {/* Content */}
-            <textarea
+            <div
               ref={contentRef}
-              placeholder="Añade una nota..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full h-64 bg-transparent border-none outline-none resize-none placeholder-current/60"
+              contentEditable
+              suppressContentEditableWarning={true}
+              onInput={(e) => setContent((e.target as HTMLDivElement).innerHTML)}
+              onClick={handleContentClick}
+              onKeyUp={handleContentKeyUp}
+              className="w-full h-64 bg-transparent border-none outline-none resize-none overflow-y-auto p-2 border border-gray-200 rounded [&:empty]:before:content-[attr(data-placeholder)] [&:empty]:before:text-gray-400"
               style={{ color: selectedColor === '#FFFFFF' ? '#000' : '#333' }}
+              data-placeholder="Añade una nota..."
             />
           </div>
 
@@ -306,30 +414,33 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleFormatClick('bold')}
-                    className={`
-                      p-2 rounded hover:bg-gray-100 transition-colors
-                      ${activeFormat.includes('bold') ? 'bg-blue-100 text-blue-600' : ''}
-                    `}
+                    className={`p-2 rounded transition-colors ${
+                      activeFormats.includes('bold') 
+                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                        : 'hover:bg-gray-100'
+                    }`}
                     title="Negrita"
                   >
                     <Bold className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleFormatClick('italic')}
-                    className={`
-                      p-2 rounded hover:bg-gray-100 transition-colors
-                      ${activeFormat.includes('italic') ? 'bg-blue-100 text-blue-600' : ''}
-                    `}
+                    className={`p-2 rounded transition-colors ${
+                      activeFormats.includes('italic') 
+                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                        : 'hover:bg-gray-100'
+                    }`}
                     title="Cursiva"
                   >
                     <Italic className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleFormatClick('underline')}
-                    className={`
-                      p-2 rounded hover:bg-gray-100 transition-colors
-                      ${activeFormat.includes('underline') ? 'bg-blue-100 text-blue-600' : ''}
-                    `}
+                    className={`p-2 rounded transition-colors ${
+                      activeFormats.includes('underline') 
+                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                        : 'hover:bg-gray-100'
+                    }`}
                     title="Subrayado"
                   >
                     <Underline className="w-4 h-4" />
@@ -337,20 +448,22 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
                   <div className="w-px h-6 bg-gray-300 mx-1" />
                   <button
                     onClick={() => handleFormatClick('h1')}
-                    className={`
-                      p-2 rounded hover:bg-gray-100 transition-colors text-sm font-semibold
-                      ${activeFormat.includes('h1') ? 'bg-blue-100 text-blue-600' : ''}
-                    `}
+                    className={`p-2 rounded transition-colors text-sm font-semibold ${
+                      activeFormats.includes('h1') 
+                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                        : 'hover:bg-gray-100'
+                    }`}
                     title="Título grande"
                   >
                     H1
                   </button>
                   <button
                     onClick={() => handleFormatClick('h2')}
-                    className={`
-                      p-2 rounded hover:bg-gray-100 transition-colors text-sm font-semibold
-                      ${activeFormat.includes('h2') ? 'bg-blue-100 text-blue-600' : ''}
-                    `}
+                    className={`p-2 rounded transition-colors text-sm font-semibold ${
+                      activeFormats.includes('h2') 
+                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                        : 'hover:bg-gray-100'
+                    }`}
                     title="Subtítulo"
                   >
                     H2
@@ -377,7 +490,10 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
                       <IconComponent className="w-5 h-5" />
                       
                       {/* Tooltip */}
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
+                      <div className={`
+                        absolute bottom-full mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20
+                        ${button.id === 'more' || button.id === 'archive' ? 'right-0' : 'left-1/2 transform -translate-x-1/2'}
+                      `}>
                         {button.tooltip}
                       </div>
                     </button>
