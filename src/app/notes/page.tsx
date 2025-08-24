@@ -2,12 +2,13 @@
 
 import { t } from '@/lib/i18n';
 import { THEME_COLORS } from '@/lib/theme-colors';
-import { Plus, Search, MoreVertical, Pin, Palette, Bell, Archive, Trash2 } from 'lucide-react';
+import { Plus, Search, MoreVertical, Pin, Palette, Bell, Archive, Trash2, FolderPlus, Home, FolderIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import NoteEditorModal from '@/components/notes/NoteEditorModal';
+import FolderCreateModal from '@/components/FolderCreateModal';
 import {
   DndContext,
   DragEndEvent,
@@ -25,6 +26,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { getFolders, type Folder } from '@/lib/snippets';
 
 // Datos de ejemplo basados en la imagen de referencia
 const EXAMPLE_NOTES = [
@@ -128,6 +130,10 @@ export default function NotesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [showFolderCreateModal, setShowFolderCreateModal] = useState(false);
+  const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const [isEditingFolderName, setIsEditingFolderName] = useState(false);
+  const [editingFolderName, setEditingFolderName] = useState('');
 
   // Sensor para drag & drop
   const sensors = useSensors(
@@ -144,9 +150,42 @@ export default function NotesPage() {
     note.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Filtrar notas por carpeta actual
+  const folderFilteredNotes = filteredNotes.filter(note => {
+    if (currentFolderId) {
+      return note.folder_id === currentFolderId;
+    }
+    return note.folder_id === null; // Solo mostrar notas sin carpeta en la vista principal
+  });
+
   // Separar notas fijas y normales
-  const pinnedNotes = filteredNotes.filter(note => note.isPinned);
-  const regularNotes = filteredNotes.filter(note => !note.isPinned);
+  const pinnedNotes = folderFilteredNotes.filter(note => note.isPinned);
+  const regularNotes = folderFilteredNotes.filter(note => !note.isPinned);
+
+  // Cargar carpeta actual cuando cambie el parámetro
+  useEffect(() => {
+    if (currentFolderId && userId) {
+      loadCurrentFolder();
+    } else {
+      setCurrentFolder(null);
+    }
+  }, [currentFolderId, userId]);
+
+  const loadCurrentFolder = async () => {
+    if (!currentFolderId || !userId) {
+      setCurrentFolder(null);
+      return;
+    }
+    
+    try {
+      const userEmail = user?.primaryEmailAddress?.emailAddress || '';
+      const folders = await getFolders('notes', userId, userEmail);
+      const folder = folders.find(f => f.id === currentFolderId);
+      setCurrentFolder(folder || null);
+    } catch (error) {
+      console.error('Error loading folder:', error);
+    }
+  };
 
   const handleCreateNote = () => {
     setEditingNote(null);
@@ -195,61 +234,134 @@ export default function NotesPage() {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header con barra de búsqueda */}
-      <div className={`${THEME_COLORS.main.background} border-b ${THEME_COLORS.dashboard.card.border} p-4`}>
-        <div className="flex items-center justify-between gap-4">
-          {/* Título de la sección */}
-          <div className="flex items-center gap-3">
-            <h1 className={`${THEME_COLORS.dashboard.title} text-2xl font-bold`}>
-              Mis Notas
-            </h1>
-          </div>
-
-          {/* Controles del lado derecho */}
-          <div className="flex items-center gap-4">
-            {/* Buscador compacto que se expande */}
-            <div className="relative">
-              <Search className={`
-                absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10
-                transition-colors duration-200
-                ${isSearchFocused ? 'text-blue-500' : ''}
-              `} />
-              <input
-                type="text"
-                placeholder="Buscar notas..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                className={`
-                  pl-10 pr-4 py-3 rounded-lg border ${THEME_COLORS.dashboard.card.border} 
-                  ${THEME_COLORS.dashboard.card.background} ${THEME_COLORS.dashboard.title}
-                  focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
-                  transition-all duration-300 ease-in-out
-                  ${isSearchFocused ? 'w-96' : 'w-64'}
-                `}
-              />
+      {/* Header con navegación */}
+      <div className={`${THEME_COLORS.main.background} p-6`}>
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-4">
+              {currentFolder ? (
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: currentFolder.color + '20' }}
+                  >
+                    <FolderIcon size={18} style={{ color: currentFolder.color }} />
+                  </div>
+                  <div>
+                    {isEditingFolderName ? (
+                      <input
+                        type="text"
+                        value={editingFolderName}
+                        onChange={(e) => setEditingFolderName(e.target.value)}
+                        onBlur={() => setIsEditingFolderName(false)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            setIsEditingFolderName(false);
+                          }
+                          if (e.key === 'Escape') {
+                            setIsEditingFolderName(false);
+                          }
+                        }}
+                        className={`
+                          text-3xl font-bold bg-transparent border-none outline-none
+                          ${THEME_COLORS.dashboard.title}
+                          border-b-2 border-blue-500 pb-1
+                        `}
+                        autoFocus
+                        maxLength={30}
+                      />
+                    ) : (
+                      <h1 
+                        onClick={() => {
+                          setEditingFolderName(currentFolder.name);
+                          setIsEditingFolderName(true);
+                        }}
+                        className={`text-3xl font-bold ${THEME_COLORS.dashboard.title} cursor-pointer hover:text-blue-500 ${THEME_COLORS.transitions.all}`}
+                      >
+                        {currentFolder.name}
+                      </h1>
+                    )}
+                    <p className={`text-sm ${THEME_COLORS.dashboard.subtitle}`}>
+                      Carpeta de Mis Notas
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Home size={24} className={THEME_COLORS.icons.snippets} />
+                  <h1 className={`text-3xl font-bold ${THEME_COLORS.dashboard.title}`}>
+                    Mis Notas
+                  </h1>
+                </div>
+              )}
             </div>
+            
+            <div className="flex items-center space-x-3">
+              {/* Buscador compacto que se expande */}
+              <div className="relative">
+                <Search className={`
+                  absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10
+                  transition-colors duration-200
+                  ${isSearchFocused ? 'text-blue-500' : ''}
+                `} />
+                <input
+                  type="text"
+                  placeholder="Buscar notas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  className={`
+                    pl-10 pr-4 py-2 rounded-lg border ${THEME_COLORS.dashboard.card.border} 
+                    ${THEME_COLORS.dashboard.card.background} ${THEME_COLORS.dashboard.title}
+                    focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                    transition-all duration-300 ease-in-out
+                    ${isSearchFocused ? 'w-96' : 'w-64'}
+                  `}
+                />
+              </div>
 
-            {/* Botón Nueva nota */}
-            <button
-              onClick={handleCreateNote}
-              className={`
-                flex items-center gap-2 px-4 py-3 rounded-lg
-                bg-blue-500 hover:bg-blue-600 text-white
-                ${THEME_COLORS.transitions.all}
-                font-medium whitespace-nowrap
-              `}
-            >
-              <Plus className="w-5 h-5" />
-              <span>Nueva nota</span>
-            </button>
+              {/* Botón Nueva nota - estilo consistente con snippets */}
+              <button
+                onClick={handleCreateNote}
+                className={`
+                  flex items-center space-x-2 px-4 py-2
+                  ${THEME_COLORS.sidebar.nav.item.active.background}
+                  ${THEME_COLORS.sidebar.nav.item.active.text}
+                  border ${THEME_COLORS.sidebar.nav.item.active.border}
+                  rounded-lg font-medium
+                  hover:${THEME_COLORS.sidebar.nav.item.active.textHover}
+                  ${THEME_COLORS.transitions.all}
+                `}
+              >
+                <Plus size={18} />
+                <span>Agregar</span>
+              </button>
+
+              {/* Botón Nueva carpeta - estilo consistente con snippets */}
+              <button
+                onClick={() => setShowFolderCreateModal(true)}
+                className={`
+                  flex items-center space-x-2 px-3 py-2
+                  ${THEME_COLORS.topBar.actions.button.background}
+                  ${THEME_COLORS.topBar.actions.button.text}
+                  border ${THEME_COLORS.dashboard.card.border}
+                  rounded-lg font-medium
+                  hover:${THEME_COLORS.topBar.actions.button.textHover}
+                  ${THEME_COLORS.transitions.all}
+                `}
+                title="Crear nueva carpeta"
+              >
+                <FolderPlus size={18} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Contenido principal */}
-      <div className={`flex-1 ${THEME_COLORS.main.background} p-6 overflow-y-auto`}>
+      <div className={`flex-1 ${THEME_COLORS.main.background} px-6 pb-6 overflow-y-auto`}>
         <div className="max-w-7xl mx-auto">
           <DndContext
             sensors={sensors}
@@ -292,16 +404,26 @@ export default function NotesPage() {
             </SortableContext>
 
           {/* Estado vacío */}
-          {filteredNotes.length === 0 && !loading && (
+          {folderFilteredNotes.length === 0 && !loading && (
             <div className="text-center py-20">
               <div className={`w-20 h-20 mx-auto mb-4 rounded-full ${THEME_COLORS.dashboard.card.background} flex items-center justify-center`}>
                 <Plus className={`w-8 h-8 ${THEME_COLORS.dashboard.subtitle}`} />
               </div>
               <h3 className={`${THEME_COLORS.dashboard.title} text-lg font-medium mb-2`}>
-                {searchQuery ? 'No hay notas que coincidan' : 'Aún no tienes notas'}
+                {searchQuery 
+                  ? 'No hay notas que coincidan' 
+                  : currentFolder 
+                    ? `La carpeta "${currentFolder.name}" está vacía`
+                    : 'Aún no tienes notas'
+                }
               </h3>
               <p className={`${THEME_COLORS.dashboard.subtitle} mb-6`}>
-                {searchQuery ? 'Intenta con diferentes términos de búsqueda' : 'Crea tu primera nota para comenzar'}
+                {searchQuery 
+                  ? 'Intenta con diferentes términos de búsqueda' 
+                  : currentFolder
+                    ? `Crea tu primera nota en "${currentFolder.name}"`
+                    : 'Crea tu primera nota para comenzar'
+                }
               </p>
               {!searchQuery && (
                 <button
@@ -311,7 +433,7 @@ export default function NotesPage() {
                     ${THEME_COLORS.transitions.all} font-medium
                   `}
                 >
-                  Crear primera nota
+                  {currentFolder ? `Crear nota en ${currentFolder.name}` : 'Crear primera nota'}
                 </button>
               )}
             </div>
@@ -326,6 +448,23 @@ export default function NotesPage() {
         onClose={handleCloseModal}
         note={editingNote}
         onSave={handleSaveNote}
+      />
+
+      {/* Modal de creación de carpetas */}
+      <FolderCreateModal 
+        isOpen={showFolderCreateModal} 
+        onClose={() => setShowFolderCreateModal(false)}
+        type="notes"
+        parentFolderId={currentFolderId}
+        parentFolderName={currentFolder?.name}
+        onFolderCreated={() => {
+          setShowFolderCreateModal(false);
+          // Recargar datos dinámicamente sin recargar la página
+          setTimeout(() => {
+            // Aquí cargaríamos las carpetas de notas si tuviéramos la función
+            console.log('Carpeta de notas creada');
+          }, 500);
+        }}
       />
     </div>
   );
