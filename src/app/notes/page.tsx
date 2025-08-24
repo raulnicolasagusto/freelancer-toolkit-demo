@@ -8,6 +8,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import NoteEditorModal from '@/components/notes/NoteEditorModal';
+import {
+  DndContext,
+  DragEndEvent,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  closestCenter,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Datos de ejemplo basados en la imagen de referencia
 const EXAMPLE_NOTES = [
@@ -111,6 +128,15 @@ export default function NotesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Sensor para drag & drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Requiere mover 8px antes de activar drag
+      },
+    })
+  );
+
   // Filtrar notas por búsqueda
   const filteredNotes = notes.filter(note => 
     note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,6 +174,22 @@ export default function NotesPage() {
   const handleCloseModal = () => {
     setShowCreateModal(false);
     setEditingNote(null);
+  };
+
+  // Función para manejar el final del drag
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    setNotes((notes) => {
+      const oldIndex = notes.findIndex(note => note.id === active.id);
+      const newIndex = notes.findIndex(note => note.id === over.id);
+      
+      return arrayMove(notes, oldIndex, newIndex);
+    });
   };
 
   return (
@@ -188,38 +230,45 @@ export default function NotesPage() {
       {/* Contenido principal */}
       <div className={`flex-1 ${THEME_COLORS.main.background} p-6 overflow-y-auto`}>
         <div className="max-w-7xl mx-auto">
-          {/* Notas fijas */}
-          {pinnedNotes.length > 0 && (
-            <div className="mb-8">
-              <h2 className={`${THEME_COLORS.dashboard.title} font-medium text-sm uppercase tracking-wide mb-4 flex items-center gap-2`}>
-                <Pin className="w-4 h-4" />
-                Fijadas
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-                {pinnedNotes.map((note, index) => (
-                  <NoteCard key={note.id} note={note} index={index} onEdit={handleEditNote} />
-                ))}
-              </div>
-            </div>
-          )}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={notes.map(note => note.id)} strategy={verticalListSortingStrategy}>
+              {/* Notas fijas */}
+              {pinnedNotes.length > 0 && (
+                <div className="mb-8">
+                  <h2 className={`${THEME_COLORS.dashboard.title} font-medium text-sm uppercase tracking-wide mb-4 flex items-center gap-2`}>
+                    <Pin className="w-4 h-4" />
+                    Fijadas
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                    {pinnedNotes.map((note, index) => (
+                      <SortableNoteCard key={note.id} note={note} index={index} onEdit={handleEditNote} />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Separador */}
-          {pinnedNotes.length > 0 && regularNotes.length > 0 && (
-            <div className="mb-6">
-              <h2 className={`${THEME_COLORS.dashboard.subtitle} font-medium text-sm uppercase tracking-wide mb-4`}>
-                Otras
-              </h2>
-            </div>
-          )}
+              {/* Separador */}
+              {pinnedNotes.length > 0 && regularNotes.length > 0 && (
+                <div className="mb-6">
+                  <h2 className={`${THEME_COLORS.dashboard.subtitle} font-medium text-sm uppercase tracking-wide mb-4`}>
+                    Otras
+                  </h2>
+                </div>
+              )}
 
-          {/* Notas normales - Grid masonry */}
-          {regularNotes.length > 0 && (
-            <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-4 space-y-4">
-              {regularNotes.map((note, index) => (
-                <NoteCard key={note.id} note={note} index={index} masonry onEdit={handleEditNote} />
-              ))}
-            </div>
-          )}
+              {/* Notas normales - Grid masonry */}
+              {regularNotes.length > 0 && (
+                <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-4 space-y-4">
+                  {regularNotes.map((note, index) => (
+                    <SortableNoteCard key={note.id} note={note} index={index} masonry onEdit={handleEditNote} />
+                  ))}
+                </div>
+              )}
+            </SortableContext>
 
           {/* Estado vacío */}
           {filteredNotes.length === 0 && !loading && (
@@ -246,6 +295,7 @@ export default function NotesPage() {
               )}
             </div>
           )}
+          </DndContext>
         </div>
       </div>
 
@@ -260,18 +310,59 @@ export default function NotesPage() {
   );
 }
 
-// Componente para tarjetas de notas
-interface NoteCardProps {
+// Componente sortable que envuelve NoteCard
+interface SortableNoteCardProps {
   note: Note;
   index: number;
   masonry?: boolean;
   onEdit?: (note: Note) => void;
 }
 
-function NoteCard({ note, index, masonry = false, onEdit }: NoteCardProps) {
+function SortableNoteCard({ note, index, masonry = false, onEdit }: SortableNoteCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: note.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <NoteCard 
+        note={note} 
+        index={index} 
+        masonry={masonry} 
+        onEdit={onEdit}
+        isDragging={isDragging}
+      />
+    </div>
+  );
+}
+
+// Componente para tarjetas de notas
+interface NoteCardProps {
+  note: Note;
+  index: number;
+  masonry?: boolean;
+  onEdit?: (note: Note) => void;
+  isDragging?: boolean;
+}
+
+function NoteCard({ note, index, masonry = false, onEdit, isDragging = false }: NoteCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleClick = () => {
+    // No abrir modal si estamos arrastrando
+    if (isDragging) return;
+    
     if (onEdit) {
       onEdit(note);
     }
@@ -292,7 +383,8 @@ function NoteCard({ note, index, masonry = false, onEdit }: NoteCardProps) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={`
-          relative rounded-lg border border-gray-200 hover:shadow-lg
+          relative rounded-lg border border-gray-200 hover:shadow-lg 
+          ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
           ${THEME_COLORS.transitions.all}
           overflow-hidden
         `}
