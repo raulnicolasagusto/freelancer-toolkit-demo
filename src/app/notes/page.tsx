@@ -127,6 +127,7 @@ export default function NotesPage() {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // Sensor para drag & drop
   const sensors = useSensors(
@@ -196,34 +197,54 @@ export default function NotesPage() {
     <div className="h-full flex flex-col">
       {/* Header con barra de búsqueda */}
       <div className={`${THEME_COLORS.main.background} border-b ${THEME_COLORS.dashboard.card.border} p-4`}>
-        <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Buscar en las notas"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`
-                w-full pl-10 pr-4 py-3 rounded-lg border ${THEME_COLORS.dashboard.card.border} 
-                ${THEME_COLORS.dashboard.card.background} ${THEME_COLORS.dashboard.title}
-                focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
-                ${THEME_COLORS.transitions.all}
-              `}
-            />
+        <div className="flex items-center justify-between gap-4">
+          {/* Título de la sección */}
+          <div className="flex items-center gap-3">
+            <h1 className={`${THEME_COLORS.dashboard.title} text-2xl font-bold`}>
+              Mis Notas
+            </h1>
           </div>
-          <button
-            onClick={handleCreateNote}
-            className={`
-              flex items-center gap-2 px-4 py-3 rounded-lg
-              bg-blue-500 hover:bg-blue-600 text-white
-              ${THEME_COLORS.transitions.all}
-              font-medium
-            `}
-          >
-            <Plus className="w-5 h-5" />
-            <span>Nueva nota</span>
-          </button>
+
+          {/* Controles del lado derecho */}
+          <div className="flex items-center gap-4">
+            {/* Buscador compacto que se expande */}
+            <div className="relative">
+              <Search className={`
+                absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10
+                transition-colors duration-200
+                ${isSearchFocused ? 'text-blue-500' : ''}
+              `} />
+              <input
+                type="text"
+                placeholder="Buscar notas..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                className={`
+                  pl-10 pr-4 py-3 rounded-lg border ${THEME_COLORS.dashboard.card.border} 
+                  ${THEME_COLORS.dashboard.card.background} ${THEME_COLORS.dashboard.title}
+                  focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                  transition-all duration-300 ease-in-out
+                  ${isSearchFocused ? 'w-96' : 'w-64'}
+                `}
+              />
+            </div>
+
+            {/* Botón Nueva nota */}
+            <button
+              onClick={handleCreateNote}
+              className={`
+                flex items-center gap-2 px-4 py-3 rounded-lg
+                bg-blue-500 hover:bg-blue-600 text-white
+                ${THEME_COLORS.transitions.all}
+                font-medium whitespace-nowrap
+              `}
+            >
+              <Plus className="w-5 h-5" />
+              <span>Nueva nota</span>
+            </button>
+          </div>
         </div>
       </div>
 
