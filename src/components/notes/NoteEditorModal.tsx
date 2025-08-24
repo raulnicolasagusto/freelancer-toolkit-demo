@@ -29,6 +29,9 @@ interface NoteEditorModalProps {
     content: string;
     color: string;
     type: 'text' | 'list' | 'image';
+    isPinned?: boolean;
+    imageUrl?: string;
+    listItems?: Array<{ id: string; text: string; completed: boolean }>;
     reminder_date?: string;
     reminder_time?: string;
     reminder_location?: string;
@@ -38,9 +41,11 @@ interface NoteEditorModalProps {
     title: string;
     content: string;
     color: string;
-    type: 'text';
+    type: 'text' | 'list' | 'image';
     isPinned: boolean;
     createdAt: string;
+    imageUrl?: string;
+    listItems?: Array<{ id: string; text: string; completed: boolean }>;
     reminder_date?: string;
     reminder_time?: string;
     reminder_location?: string;
@@ -123,6 +128,8 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
   const [title, setTitle] = useState(note?.title || '');
   const [content, setContent] = useState(note?.content || '');
   const [selectedColor, setSelectedColor] = useState(note?.color || COLOR_PALETTE[0]);
+  const [selectedType, setSelectedType] = useState<'text' | 'list' | 'image'>(note?.type || 'text');
+  const [isPinned, setIsPinned] = useState(note?.isPinned || false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showFormatMenu, setShowFormatMenu] = useState(false);
   const [showReminderMenu, setShowReminderMenu] = useState(false);
@@ -146,6 +153,8 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
       setTitle(initialTitle);
       setContent(initialContent);
       setSelectedColor(initialColor);
+      setSelectedType(note?.type || 'text');
+      setIsPinned(note?.isPinned || false);
       setReminderData({
         date: note?.reminder_date || '',
         time: note?.reminder_time || '',
@@ -186,10 +195,9 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
       title: hasTitle ? title.trim() : '',
       content: hasContent ? content.trim() : '',
       color: selectedColor,
-      type: 'text' as const,
-      isPinned: false,
+      type: selectedType,
+      isPinned,
       createdAt: new Date().toISOString(),
-      folder_id: null, // Agregar esta propiedad que falta
       reminder_date: reminderData.date || undefined,
       reminder_time: reminderData.time || undefined,
       reminder_location: reminderData.location || undefined,
@@ -224,8 +232,8 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
         setShowFormatMenu(false);
         break;
       case 'pin':
-        // Implementar más adelante
-        console.log('Pin clicked');
+        setIsPinned(!isPinned);
+        console.log('Pin toggled:', !isPinned);
         break;
       case 'image':
         // Implementar más adelante
@@ -333,6 +341,8 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
     setTitle('');
     setContent('');
     setSelectedColor(COLOR_PALETTE[0]);
+    setSelectedType('text');
+    setIsPinned(false);
     setShowColorPicker(false);
     setShowFormatMenu(false);
     setShowReminderMenu(false);
@@ -519,6 +529,7 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
                 {TOOLBAR_BUTTONS.map((button) => {
                   const IconComponent = button.icon;
                   const hasReminder = button.id === 'reminder' && reminderData.date && reminderData.time;
+                  const isPinButton = button.id === 'pin';
                   
                   return (
                     <button
@@ -526,7 +537,7 @@ export default function NoteEditorModal({ isOpen, onClose, note, onSave }: NoteE
                       onClick={() => handleToolbarClick(button.id)}
                       className={`p-2 hover:bg-black/10 rounded-full transition-colors relative group ${
                         hasReminder ? 'text-orange-500' : ''
-                      }`}
+                      } ${isPinButton && isPinned ? 'text-blue-500' : ''}`}
                       title={button.tooltip}
                     >
                       <IconComponent className="w-5 h-5" />

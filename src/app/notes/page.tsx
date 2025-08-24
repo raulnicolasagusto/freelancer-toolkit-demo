@@ -27,78 +27,9 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { getFolders, type Folder } from '@/lib/snippets';
+import { getNotes, createNote, updateNote, deleteNote, type Note as NoteType } from '@/lib/notes';
 
-// Datos de ejemplo basados en la imagen de referencia
-const EXAMPLE_NOTES = [
-  // Notas fijas
-  {
-    id: '1',
-    title: '',
-    content: 'prueba 2',
-    type: 'image' as const,
-    color: '#A7C8E0',
-    isPinned: true,
-    imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTlmMmZmIi8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iNzUiIHI9IjMwIiBmaWxsPSIjYzNkZGZkIi8+PHRleHQgeD0iNTAlIiB5PSI4NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzMzNyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2VuIGRlIHBydWViYSAyPC90ZXh0Pjwvc3ZnPg==',
-    createdAt: '2024-01-15',
-    folder_id: null
-  },
-  // Notas normales
-  {
-    id: '2',
-    title: '',
-    content: 'Te damos la bienvenida a Google Keep\n\nCaptura tus ideas.\n\nAgrega notas, listas, fotos y audios a Keep.',
-    type: 'text' as const,
-    color: '#FFF8C4',
-    isPinned: false,
-    createdAt: '2024-01-14',
-    folder_id: null
-  },
-  {
-    id: '3',
-    title: '',
-    content: 'Todo en un solo lugar\n\nSin importar la forma en la que accedas a Keep, todas las notas siempre están sincronizadas.\n\nEn la Web\nhttps://keep.google.com\n\nEn Android\nhttps://g.co/keep\n\nEn Chrome\nhttps://g.co/keepinchrome',
-    type: 'text' as const,
-    color: '#FFB5A0',
-    isPinned: false,
-    createdAt: '2024-01-13',
-    folder_id: null
-  },
-  {
-    id: '4',
-    title: '',
-    content: 'Crear una lista',
-    type: 'list' as const,
-    color: '#A7CCBB',
-    isPinned: false,
-    listItems: [
-      { id: '1', text: '1 elemento completado', completed: true },
-      { id: '2', text: 'Los elementos marcados pasan de forma automática al final de la...', completed: false }
-    ],
-    createdAt: '2024-01-12',
-    folder_id: null
-  },
-  {
-    id: '5',
-    title: '',
-    content: '¿Ya no usas más una nota?\n\nPresiona el botón para archivar o desliza el dedo para que desaparezca en Android.\n\n¡Pruébalo! Puedes buscarla cuando quieras.',
-    type: 'text' as const,
-    color: '#E8F5E8',
-    isPinned: false,
-    createdAt: '2024-01-11',
-    folder_id: null
-  },
-  {
-    id: '6',
-    title: 'Prueba 1',
-    content: 'pruebaghgjgkgkuk',
-    type: 'image' as const,
-    color: '#C8E6C9',
-    isPinned: false,
-    imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmOWZmIi8+PGNpcmNsZSBjeD0iOTAiIGN5PSI2MCIgcj0iMjUiIGZpbGw9IiNiZGY0ZWEiLz48dGV4dCB4PSI1MCUiIHk9Ijg1JSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjMzc0MTUxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZW4gUHJ1ZWJhIDE8L3RleHQ+PC9zdmc+',
-    createdAt: '2024-01-10',
-    folder_id: null
-  }
-];
+// Interfaz para mantener compatibilidad con el componente actual
 
 interface Note {
   id: string;
@@ -115,6 +46,9 @@ interface Note {
   }>;
   createdAt: string;
   folder_id: string | null;
+  reminder_date?: string;
+  reminder_time?: string;
+  reminder_location?: string;
 }
 
 export default function NotesPage() {
@@ -124,7 +58,7 @@ export default function NotesPage() {
   const searchParams = useSearchParams();
   const currentFolderId = searchParams.get('folder');
   
-  const [notes, setNotes] = useState<Note[]>(EXAMPLE_NOTES);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -134,6 +68,45 @@ export default function NotesPage() {
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
   const [isEditingFolderName, setIsEditingFolderName] = useState(false);
   const [editingFolderName, setEditingFolderName] = useState('');
+
+  // Cargar notas cuando cambie el usuario o la carpeta
+  useEffect(() => {
+    if (userId) {
+      loadNotes();
+    }
+  }, [userId, currentFolderId]);
+
+  const loadNotes = async () => {
+    try {
+      setLoading(true);
+      const userEmail = user?.primaryEmailAddress?.emailAddress || '';
+      const notesData = await getNotes(currentFolderId, userId, userEmail);
+      
+      // Convertir formato de BD a formato del componente
+      const formattedNotes = notesData.map(note => ({
+        id: note.id,
+        title: note.title,
+        content: note.content,
+        type: note.type,
+        color: note.color,
+        isPinned: note.is_pinned,
+        imageUrl: note.image_url,
+        listItems: note.list_items,
+        createdAt: note.created_at,
+        folder_id: note.folder_id,
+        reminder_date: note.reminder_date,
+        reminder_time: note.reminder_time,
+        reminder_location: note.reminder_location
+      }));
+      
+      setNotes(formattedNotes);
+      console.log('Notas cargadas:', formattedNotes);
+    } catch (error) {
+      console.error('Error loading notes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Sensor para drag & drop
   const sensors = useSensors(
@@ -208,35 +181,82 @@ export default function NotesPage() {
     setShowCreateModal(true);
   };
 
-  const handleSaveNote = (noteData: any) => {
+  const handleSaveNote = async (noteData: any) => {
     console.log('handleSaveNote called with:', noteData);
     console.log('editingNote:', editingNote);
     
-    if (editingNote) {
-      // Actualizar nota existente
-      console.log('Updating existing note');
-      setNotes(prev => {
-        const updated = prev.map(note => 
-          note.id === editingNote.id ? { ...note, ...noteData } : note
-        );
-        console.log('Updated notes array:', updated);
-        return updated;
-      });
-    } else {
-      // Crear nueva nota - asegurar que tiene todas las propiedades requeridas
-      console.log('Creating new note');
-      const completeNote = {
-        ...noteData,
-        folder_id: noteData.folder_id || null,
-        createdAt: noteData.createdAt || new Date().toISOString(),
-      };
+    try {
+      if (editingNote) {
+        // Actualizar nota existente
+        console.log('Updating existing note');
+        const updatedNote = await updateNote(editingNote.id, {
+          title: noteData.title,
+          content: noteData.content,
+          color: noteData.color,
+          is_pinned: noteData.isPinned,
+          reminder_date: noteData.reminder_date,
+          reminder_time: noteData.reminder_time,
+          reminder_location: noteData.reminder_location,
+          type: noteData.type || 'text'
+        });
+        
+        if (updatedNote) {
+          // Actualizar en el estado local
+          setNotes(prev => prev.map(note => 
+            note.id === editingNote.id ? {
+              ...note,
+              title: updatedNote.title,
+              content: updatedNote.content,
+              color: updatedNote.color,
+              isPinned: updatedNote.is_pinned,
+              reminder_date: updatedNote.reminder_date,
+              reminder_time: updatedNote.reminder_time,
+              reminder_location: updatedNote.reminder_location
+            } : note
+          ));
+        }
+      } else {
+        // Crear nueva nota
+        console.log('Creating new note');
+        const userEmail = user?.primaryEmailAddress?.emailAddress || '';
+        const newNote = await createNote({
+          title: noteData.title,
+          content: noteData.content,
+          type: noteData.type || 'text',
+          color: noteData.color,
+          is_pinned: noteData.isPinned || false,
+          folder_id: currentFolderId,
+          reminder_date: noteData.reminder_date,
+          reminder_time: noteData.reminder_time,
+          reminder_location: noteData.reminder_location
+        }, userId, userEmail);
+        
+        if (newNote) {
+          // Agregar al estado local con formato correcto
+          const formattedNote = {
+            id: newNote.id,
+            title: newNote.title,
+            content: newNote.content,
+            type: newNote.type,
+            color: newNote.color,
+            isPinned: newNote.is_pinned,
+            imageUrl: newNote.image_url,
+            listItems: newNote.list_items,
+            createdAt: newNote.created_at,
+            folder_id: newNote.folder_id,
+            reminder_date: newNote.reminder_date,
+            reminder_time: newNote.reminder_time,
+            reminder_location: newNote.reminder_location
+          };
+          
+          setNotes(prev => [formattedNote, ...prev]);
+        }
+      }
       
-      setNotes(prev => {
-        const newNotes = [...prev, completeNote];
-        console.log('New notes array:', newNotes);
-        console.log('Total notes count:', newNotes.length);
-        return newNotes;
-      });
+      console.log('Note saved successfully');
+    } catch (error) {
+      console.error('Error saving note:', error);
+      // TODO: Mostrar mensaje de error al usuario
     }
     
     console.log('Closing modal and resetting editing state');
@@ -435,6 +455,18 @@ export default function NotesPage() {
                 </div>
               )}
             </SortableContext>
+
+          {/* Loading state */}
+          {loading && (
+            <div className="text-center py-20">
+              <div className={`w-20 h-20 mx-auto mb-4 rounded-full ${THEME_COLORS.dashboard.card.background} flex items-center justify-center`}>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+              <h3 className={`${THEME_COLORS.dashboard.title} text-lg font-medium mb-2`}>
+                Cargando notas...
+              </h3>
+            </div>
+          )}
 
           {/* Estado vacío */}
           {folderFilteredNotes.length === 0 && !loading && (
