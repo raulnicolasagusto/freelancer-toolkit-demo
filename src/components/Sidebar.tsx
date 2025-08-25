@@ -14,7 +14,8 @@ import {
   LayoutDashboard,
   ChevronDown,
   ChevronUp,
-  Home
+  Home,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { THEME_COLORS } from '@/lib/theme-colors';
@@ -70,6 +71,12 @@ const getNavItems = (): NavItem[] => [
     label: t('sidebar.nav.resources'),
     icon: BookOpen,
     href: '/resources'
+  },
+  {
+    id: 'trash',
+    label: t('sidebar.nav.trash'),
+    icon: Trash2,
+    href: '/trash'
   }
 ];
 

@@ -19,7 +19,8 @@ export const ja: Translations = {
       snippets: "マイスニペット",
       notes: "マイノート", 
       productivity: "生産性",
-      resources: "リソース"
+      resources: "リソース",
+      trash: "ゴミ箱"
     },
     
     // ユーザー
@@ -106,5 +107,78 @@ export const ja: Translations = {
   numbers: {
     categories: "カテゴリ",
     completed: "完了"
+  },
+
+  // === スニペットページ ===
+  snippets: {
+    pageTitle: "マイスニペット",
+    addButton: "追加",
+    emptyState: "まだ保存されたスニペットがありません",
+    dragToMoveText: "フォルダにドラッグして移動",
+    actions: {
+      edit: "スニペットを編集",
+      delete: "スニペットを削除"
+    }
+  },
+
+  // === TRASH/ゴミ箱 ===
+  trash: {
+    pageTitle: "ゴミ箱",
+    subtitle: "30日未満に削除されたアイテム",
+    emptyState: {
+      title: "ゴミ箱は空です",
+      description: "削除されたアイテムがここに表示され、30日後に自動的に削除されます"
+    },
+    actions: {
+      restore: "復元",
+      deleteForever: "完全に削除",
+      emptyTrash: "ゴミ箱を空にする"
+    },
+    confirmDelete: {
+      title: "削除の確認",
+      message: "{itemType}を完全に削除してもよろしいですか？",
+      itemWillBeDeleted: "このアイテムは完全に削除され、復元できません。",
+      warningAutoDelete: "{days}日後に自動的に削除されます",
+      actions: {
+        cancel: "キャンセル",
+        deleteForever: "完全に削除",
+        moveToTrash: "ゴミ箱に移動"
+      }
+    },
+    deleteOptions: {
+      title: "このノートをどのように削除しますか？",
+      description: "継続するためのオプションを選択してください",
+      softDelete: {
+        title: "ゴミ箱に移動",
+        description: "ノートは30日間ゴミ箱に移動され、その後自動的に削除されます"
+      },
+      hardDelete: {
+        title: "完全に削除",
+        description: "ノートは完全に削除され、復元できません"
+      }
+    },
+    itemTypes: {
+      note: "ノート",
+      notes: "ノート",
+      snippet: "スニペット",
+      snippets: "スニペット"
+    }
+  },
+
+  // === 上部ナビゲーションバー ===
+  topBar: {
+    search: {
+      placeholder: "ここで検索...",
+      noResults: "結果が見つかりません",
+      searching: "検索中..."
+    },
+    breadcrumbs: {
+      home: "ホーム"
+    },
+    actions: {
+      notifications: "通知",
+      settings: "設定",
+      profile: "ユーザープロフィール"
+    }
   }
 };

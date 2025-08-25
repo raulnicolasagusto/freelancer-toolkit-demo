@@ -19,7 +19,8 @@ export const pt: Translations = {
       snippets: "Meus Snippets",
       notes: "Minhas Notas", 
       productivity: "Produtividade",
-      resources: "Recursos"
+      resources: "Recursos",
+      trash: "Lixeira"
     },
     
     // Usuário
@@ -117,6 +118,67 @@ export const pt: Translations = {
     actions: {
       edit: "Editar snippet",
       delete: "Deletar snippet"
+    }
+  },
+
+  // === TRASH/LIXEIRA ===
+  trash: {
+    pageTitle: "Lixeira",
+    subtitle: "Itens excluídos há menos de 30 dias",
+    emptyState: {
+      title: "A lixeira está vazia",
+      description: "Os itens excluídos aparecerão aqui e serão automaticamente deletados após 30 dias"
+    },
+    actions: {
+      restore: "Restaurar",
+      deleteForever: "Excluir para sempre",
+      emptyTrash: "Esvaziar lixeira"
+    },
+    confirmDelete: {
+      title: "Confirmar exclusão",
+      message: "Tem certeza de que deseja excluir permanentemente {itemType}?",
+      itemWillBeDeleted: "Este item será excluído para sempre e não poderá ser recuperado.",
+      warningAutoDelete: "Será automaticamente excluído em {days} dias",
+      actions: {
+        cancel: "Cancelar",
+        deleteForever: "Excluir para sempre",
+        moveToTrash: "Mover para lixeira"
+      }
+    },
+    deleteOptions: {
+      title: "Como você deseja excluir esta nota?",
+      description: "Escolha uma opção para continuar",
+      softDelete: {
+        title: "Mover para lixeira",
+        description: "A nota será movida para a lixeira por 30 dias, depois será automaticamente excluída"
+      },
+      hardDelete: {
+        title: "Excluir para sempre",
+        description: "A nota será permanentemente excluída e não poderá ser recuperada"
+      }
+    },
+    itemTypes: {
+      note: "nota",
+      notes: "notas",
+      snippet: "snippet",
+      snippets: "snippets"
+    }
+  },
+
+  // === BARRA DE NAVEGAÇÃO SUPERIOR ===
+  topBar: {
+    search: {
+      placeholder: "Pesquisar aqui...",
+      noResults: "Nenhum resultado encontrado",
+      searching: "Pesquisando..."
+    },
+    breadcrumbs: {
+      home: "Início"
+    },
+    actions: {
+      notifications: "Notificações",
+      settings: "Configurações",
+      profile: "Perfil do usuário"
     }
   }
 };

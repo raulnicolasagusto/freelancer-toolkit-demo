@@ -24,6 +24,9 @@ export interface Note {
   reminder_location?: string;
   created_at: string;
   updated_at: string;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
+  deletion_type?: string | null;
 }
 
 // Helper function to get user data - reutilizada de snippets
@@ -71,7 +74,110 @@ async function getUserData(clerkUserId: string, userEmail?: string) {
   return userData;
 }
 
-// Obtener todas las notas del usuario
+// Datos de ejemplo para nuevos usuarios
+const EXAMPLE_NOTES_DATA = [
+  // Nota fija con imagen
+  {
+    title: '',
+    content: 'prueba 2',
+    type: 'image' as const,
+    color: '#A7C8E0',
+    is_pinned: true,
+    image_url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTlmMmZmIi8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iNzUiIHI9IjMwIiBmaWxsPSIjYzNkZGZkIi8+PHRleHQgeD0iNTAlIiB5PSI4NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzMzNyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2VuIGRlIHBydWViYSAyPC90ZXh0Pjwvc3ZnPg==',
+    category: 'general'
+  },
+  // Notas normales
+  {
+    title: '',
+    content: 'Te damos la bienvenida a Google Keep\n\nCaptura tus ideas.\n\nAgrega notas, listas, fotos y audios a Keep.',
+    type: 'text' as const,
+    color: '#FFF8C4',
+    is_pinned: false,
+    category: 'general'
+  },
+  {
+    title: '',
+    content: 'Todo en un solo lugar\n\nSin importar la forma en la que accedas a Keep, todas las notas siempre están sincronizadas.\n\nEn la Web\nhttps://keep.google.com\n\nEn Android\nhttps://g.co/keep\n\nEn Chrome\nhttps://g.co/keepinchrome',
+    type: 'text' as const,
+    color: '#FFB5A0',
+    is_pinned: false,
+    category: 'general'
+  },
+  {
+    title: '',
+    content: 'Crear una lista',
+    type: 'list' as const,
+    color: '#A7CCBB',
+    is_pinned: false,
+    list_items: [
+      { id: '1', text: '1 elemento completado', completed: true },
+      { id: '2', text: 'Los elementos marcados pasan de forma automática al final de la...', completed: false }
+    ],
+    category: 'general'
+  },
+  {
+    title: '',
+    content: '¿Ya no usas más una nota?\n\nPresiona el botón para archivar o desliza el dedo para que desaparezca en Android.\n\n¡Pruébalo! Puedes buscarla cuando quieras.',
+    type: 'text' as const,
+    color: '#E8F5E8',
+    is_pinned: false,
+    category: 'general'
+  }
+];
+
+// Función para crear notas de ejemplo para nuevos usuarios
+export async function createExampleNotes(clerkUserId: string, userEmail?: string): Promise<void> {
+  try {
+    console.log('Creating example notes for new user:', clerkUserId);
+    const supabase = createClient();
+    const userData = await getUserData(clerkUserId, userEmail);
+
+    // Verificar si el usuario ya tiene notas
+    const { data: existingNotes, error: checkError } = await supabase
+      .from('notes')
+      .select('id')
+      .eq('user_id', userData.id)
+      .limit(1);
+
+    if (checkError) {
+      console.error('Error checking existing notes:', checkError);
+      return;
+    }
+
+    // Si ya tiene notas, no crear las de ejemplo
+    if (existingNotes && existingNotes.length > 0) {
+      console.log('User already has notes, skipping example creation');
+      return;
+    }
+
+    // Crear todas las notas de ejemplo (sin columnas de papelera hasta que se ejecute el SQL)
+    const notesToInsert = EXAMPLE_NOTES_DATA.map(note => ({
+      ...note,
+      user_id: userData.id,
+      folder_id: null,
+      tags: [],
+      reminder_date: null,
+      reminder_time: null,
+      reminder_location: null
+    }));
+
+    const { data, error } = await supabase
+      .from('notes')
+      .insert(notesToInsert)
+      .select();
+
+    if (error) {
+      console.error('Error creating example notes:', error);
+      return;
+    }
+
+    console.log('Example notes created successfully:', data?.length, 'notes');
+  } catch (error) {
+    console.error('Error in createExampleNotes:', error);
+  }
+}
+
+// Obtener todas las notas del usuario (excluyendo las eliminadas)
 export async function getNotes(folderId?: string | null, clerkUserId?: string, userEmail?: string): Promise<Note[]> {
   try {
     if (!clerkUserId) {
@@ -85,11 +191,12 @@ export async function getNotes(folderId?: string | null, clerkUserId?: string, u
 
     console.log('User data for notes:', userData);
 
-    // Construir query para notas
+    // Construir query para notas (excluir eliminadas, incluyendo notas sin columnas de papelera)
     let query = supabase
       .from('notes')
       .select('*')
       .eq('user_id', userData.id)
+      .or('is_deleted.is.null,is_deleted.eq.false') // Solo notas no eliminadas o sin la columna
       .order('updated_at', { ascending: false });
 
     if (folderId === null) {
@@ -109,6 +216,49 @@ export async function getNotes(folderId?: string | null, clerkUserId?: string, u
     return data || [];
   } catch (error) {
     console.error('Error in getNotes:', error);
+    return [];
+  }
+}
+
+// Obtener notas en la papelera
+export async function getTrashedNotes(clerkUserId: string, userEmail?: string): Promise<Note[]> {
+  try {
+    console.log('Loading trashed notes for user:', clerkUserId);
+    const supabase = createClient();
+    const userData = await getUserData(clerkUserId, userEmail);
+
+    // Verificar si las columnas de papelera existen
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', userData.id)
+        .eq('is_deleted', true) // Solo notas eliminadas
+        .not('deleted_at', 'is', null) // Con fecha de eliminación
+        .order('deleted_at', { ascending: false });
+
+      if (error && error.message.includes('deleted_at')) {
+        // Las columnas no existen, devolver array vacío
+        console.log('Trash columns not found, returning empty array');
+        return [];
+      }
+
+      if (error) {
+        console.error('Error fetching trashed notes:', error);
+        return [];
+      }
+
+      console.log('Trashed notes loaded:', data);
+      return data || [];
+    } catch (error: any) {
+      if (error.message?.includes('deleted_at') || error.message?.includes('is_deleted')) {
+        console.log('Trash columns not found, returning empty array');
+        return [];
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error in getTrashedNotes:', error);
     return [];
   }
 }
@@ -171,7 +321,7 @@ export async function createNote(noteData: {
     
     const userData = await getUserData(clerkUserId, userEmail);
 
-    // Crear nota directamente
+    // Crear nota directamente (sin columnas de papelera hasta que se ejecute el SQL)
     const { data, error } = await supabase
       .from('notes')
       .insert([{
@@ -232,11 +382,71 @@ export async function updateNote(noteId: string, updates: Partial<Note>): Promis
   }
 }
 
-// Eliminar una nota
-export async function deleteNote(noteId: string): Promise<boolean> {
+// Mover una nota a la papelera (eliminación suave)
+export async function moveNoteToTrash(noteId: string): Promise<boolean> {
   try {
     const supabase = createClient();
-    console.log('Deleting note:', noteId);
+    console.log('Moving note to trash:', noteId);
+    
+    // Verificar si las columnas de papelera existen
+    const { data: columns } = await supabase
+      .from('notes')
+      .select('is_deleted')
+      .limit(1);
+    
+    if (columns !== null) {
+      // Las columnas existen, usar eliminación suave
+      const { error } = await supabase
+        .from('notes')
+        .update({
+          is_deleted: true,
+          deleted_at: new Date().toISOString(),
+          deletion_type: 'soft'
+        })
+        .eq('id', noteId);
+
+      if (error) {
+        console.error('Error moving note to trash:', error);
+        return false;
+      }
+    } else {
+      // Las columnas no existen, usar eliminación permanente
+      console.warn('Trash columns not found, deleting permanently');
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', noteId);
+
+      if (error) {
+        console.error('Error deleting note permanently:', error);
+        return false;
+      }
+    }
+
+    console.log('Note moved to trash successfully');
+    return true;
+  } catch (error) {
+    console.error('Error in moveNoteToTrash:', error);
+    // Si hay error con columnas de papelera, intentar eliminación permanente
+    try {
+      const supabase = createClient();
+      const { error: deleteError } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', noteId);
+      
+      return !deleteError;
+    } catch {
+      return false;
+    }
+  }
+}
+
+// Eliminar una nota permanentemente
+export async function deleteNotePermanently(noteId: string): Promise<boolean> {
+  try {
+    const supabase = createClient();
+    console.log('Deleting note permanently:', noteId);
     
     const { error } = await supabase
       .from('notes')
@@ -244,16 +454,50 @@ export async function deleteNote(noteId: string): Promise<boolean> {
       .eq('id', noteId);
 
     if (error) {
-      console.error('Error deleting note:', error);
+      console.error('Error deleting note permanently:', error);
       return false;
     }
 
-    console.log('Note deleted successfully');
+    console.log('Note deleted permanently');
     return true;
   } catch (error) {
-    console.error('Error in deleteNote:', error);
+    console.error('Error in deleteNotePermanently:', error);
     return false;
   }
+}
+
+// Restaurar una nota de la papelera
+export async function restoreNote(noteId: string): Promise<boolean> {
+  try {
+    const supabase = createClient();
+    console.log('Restoring note from trash:', noteId);
+    
+    const { error } = await supabase
+      .from('notes')
+      .update({
+        is_deleted: false,
+        deleted_at: null,
+        deletion_type: null
+      })
+      .eq('id', noteId);
+
+    if (error) {
+      console.error('Error restoring note:', error);
+      return false;
+    }
+
+    console.log('Note restored successfully');
+    return true;
+  } catch (error) {
+    console.error('Error in restoreNote:', error);
+    return false;
+  }
+}
+
+// Eliminar una nota (función legacy que mantiene compatibilidad)
+export async function deleteNote(noteId: string): Promise<boolean> {
+  // Por defecto, mover a papelera
+  return moveNoteToTrash(noteId);
 }
 
 // Cambiar estado de pin de una nota

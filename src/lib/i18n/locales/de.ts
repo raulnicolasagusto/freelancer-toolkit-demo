@@ -19,7 +19,8 @@ export const de: Translations = {
       snippets: "Meine Snippets",
       notes: "Meine Notizen", 
       productivity: "Produktivität",
-      resources: "Ressourcen"
+      resources: "Ressourcen",
+      trash: "Papierkorb"
     },
     
     // Benutzer
@@ -106,5 +107,78 @@ export const de: Translations = {
   numbers: {
     categories: "Kategorien",
     completed: "abgeschlossen"
+  },
+
+  // === SNIPPETS SEITE ===
+  snippets: {
+    pageTitle: "Meine Snippets",
+    addButton: "Hinzufügen",
+    emptyState: "Sie haben noch keine Snippets gespeichert",
+    dragToMoveText: "In einen Ordner ziehen, um es zu verschieben",
+    actions: {
+      edit: "Snippet bearbeiten",
+      delete: "Snippet löschen"
+    }
+  },
+
+  // === TRASH/PAPIERKORB ===
+  trash: {
+    pageTitle: "Papierkorb",
+    subtitle: "Elemente, die vor weniger als 30 Tagen gelöscht wurden",
+    emptyState: {
+      title: "Der Papierkorb ist leer",
+      description: "Gelöschte Elemente werden hier angezeigt und nach 30 Tagen automatisch gelöscht"
+    },
+    actions: {
+      restore: "Wiederherstellen",
+      deleteForever: "Endgültig löschen",
+      emptyTrash: "Papierkorb leeren"
+    },
+    confirmDelete: {
+      title: "Löschung bestätigen",
+      message: "Sind Sie sicher, dass Sie {itemType} dauerhaft löschen möchten?",
+      itemWillBeDeleted: "Dieses Element wird endgültig gelöscht und kann nicht wiederhergestellt werden.",
+      warningAutoDelete: "Wird automatisch in {days} Tagen gelöscht",
+      actions: {
+        cancel: "Abbrechen",
+        deleteForever: "Endgültig löschen",
+        moveToTrash: "In Papierkorb verschieben"
+      }
+    },
+    deleteOptions: {
+      title: "Wie möchten Sie diese Notiz löschen?",
+      description: "Wählen Sie eine Option, um fortzufahren",
+      softDelete: {
+        title: "In Papierkorb verschieben",
+        description: "Die Notiz wird für 30 Tage in den Papierkorb verschoben und dann automatisch gelöscht"
+      },
+      hardDelete: {
+        title: "Endgültig löschen",
+        description: "Die Notiz wird dauerhaft gelöscht und kann nicht wiederhergestellt werden"
+      }
+    },
+    itemTypes: {
+      note: "Notiz",
+      notes: "Notizen",
+      snippet: "Snippet",
+      snippets: "Snippets"
+    }
+  },
+
+  // === OBERE NAVIGATIONSLEISTE ===
+  topBar: {
+    search: {
+      placeholder: "Hier suchen...",
+      noResults: "Keine Ergebnisse gefunden",
+      searching: "Suche..."
+    },
+    breadcrumbs: {
+      home: "Startseite"
+    },
+    actions: {
+      notifications: "Benachrichtigungen",
+      settings: "Einstellungen",
+      profile: "Benutzerprofil"
+    }
   }
 };

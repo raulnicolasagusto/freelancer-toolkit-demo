@@ -9,6 +9,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import NoteEditorModal from '@/components/notes/NoteEditorModal';
 import FolderCreateModal from '@/components/FolderCreateModal';
+import DeleteNoteModal from '@/components/notes/DeleteNoteModal';
 import {
   DndContext,
   DragEndEvent,
@@ -27,7 +28,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { getFolders, type Folder } from '@/lib/snippets';
-import { getNotes, createNote, updateNote, deleteNote, type Note as NoteType } from '@/lib/notes';
+import { getNotes, createNote, updateNote, deleteNote, moveNoteToTrash, deleteNotePermanently, createExampleNotes, type Note as NoteType } from '@/lib/notes';
+import toast from 'react-hot-toast';
 
 // Interfaz para mantener compatibilidad con el componente actual
 
@@ -68,6 +70,9 @@ export default function NotesPage() {
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
   const [isEditingFolderName, setIsEditingFolderName] = useState(false);
   const [editingFolderName, setEditingFolderName] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Cargar notas cuando cambie el usuario o la carpeta
   useEffect(() => {
@@ -80,6 +85,10 @@ export default function NotesPage() {
     try {
       setLoading(true);
       const userEmail = user?.primaryEmailAddress?.emailAddress || '';
+      
+      // Crear notas de ejemplo para nuevos usuarios (solo se ejecuta si no tiene notas)
+      await createExampleNotes(userId || '', userEmail);
+      
       const notesData = await getNotes(currentFolderId, userId, userEmail);
       
       // Convertir formato de BD a formato del componente
@@ -269,6 +278,66 @@ export default function NotesPage() {
     setEditingNote(null);
   };
 
+  const handleDeleteRequest = (note: Note) => {
+    setNoteToDelete(note);
+    setShowDeleteModal(true);
+  };
+
+  const handleMoveToTrash = async () => {
+    if (!noteToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const success = await moveNoteToTrash(noteToDelete.id);
+      
+      if (success) {
+        toast.success(`"${noteToDelete.title || 'Sin título'}" movida a la papelera`);
+        // Actualizar la lista de notas
+        setNotes(prev => prev.filter(n => n.id !== noteToDelete.id));
+      } else {
+        toast.error('Error al mover la nota a la papelera');
+      }
+    } catch (error) {
+      console.error('Error moving note to trash:', error);
+      toast.error('Error al mover la nota a la papelera');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+      setNoteToDelete(null);
+    }
+  };
+
+  const handleDeletePermanently = async () => {
+    if (!noteToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const success = await deleteNotePermanently(noteToDelete.id);
+      
+      if (success) {
+        toast.success(`"${noteToDelete.title || 'Sin título'}" eliminada permanentemente`);
+        // Actualizar la lista de notas
+        setNotes(prev => prev.filter(n => n.id !== noteToDelete.id));
+      } else {
+        toast.error('Error al eliminar la nota');
+      }
+    } catch (error) {
+      console.error('Error deleting note permanently:', error);
+      toast.error('Error al eliminar la nota');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+      setNoteToDelete(null);
+    }
+  };
+
+  const handleDeleteModalClose = () => {
+    if (!isDeleting) {
+      setShowDeleteModal(false);
+      setNoteToDelete(null);
+    }
+  };
+
   // Función para manejar el final del drag
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -286,9 +355,9 @@ export default function NotesPage() {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Header con navegación */}
-      <div className={`${THEME_COLORS.main.background} p-6`}>
+      <div className={`${THEME_COLORS.main.background} p-6 flex-shrink-0`}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
@@ -370,7 +439,7 @@ export default function NotesPage() {
                     ${THEME_COLORS.dashboard.card.background} ${THEME_COLORS.dashboard.title}
                     focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
                     transition-all duration-300 ease-in-out
-                    ${isSearchFocused ? 'w-96' : 'w-64'}
+                    ${isSearchFocused ? 'w-80 sm:w-96' : 'w-48 sm:w-64'}
                   `}
                 />
               </div>
@@ -414,7 +483,7 @@ export default function NotesPage() {
       </div>
 
       {/* Contenido principal */}
-      <div className={`flex-1 ${THEME_COLORS.main.background} px-6 pb-6 overflow-y-auto`}>
+      <div className={`flex-1 ${THEME_COLORS.main.background} px-6 pb-6 overflow-y-auto min-h-0`}>
         <div className="max-w-7xl mx-auto">
           <DndContext
             sensors={sensors}
@@ -431,7 +500,7 @@ export default function NotesPage() {
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                     {pinnedNotes.map((note, index) => (
-                      <SortableNoteCard key={note.id} note={note} index={index} onEdit={handleEditNote} />
+                      <SortableNoteCard key={note.id} note={note} index={index} onEdit={handleEditNote} onDelete={handleDeleteRequest} />
                     ))}
                   </div>
                 </div>
@@ -450,7 +519,7 @@ export default function NotesPage() {
               {regularNotes.length > 0 && (
                 <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-4 space-y-4">
                   {regularNotes.map((note, index) => (
-                    <SortableNoteCard key={note.id} note={note} index={index} masonry onEdit={handleEditNote} />
+                    <SortableNoteCard key={note.id} note={note} index={index} masonry onEdit={handleEditNote} onDelete={handleDeleteRequest} />
                   ))}
                 </div>
               )}
@@ -531,6 +600,16 @@ export default function NotesPage() {
           }, 500);
         }}
       />
+
+      {/* Modal de eliminación de notas */}
+      <DeleteNoteModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteModalClose}
+        onMoveToTrash={handleMoveToTrash}
+        onDeletePermanently={handleDeletePermanently}
+        noteTitle={noteToDelete?.title || 'Sin título'}
+        isProcessing={isDeleting}
+      />
     </div>
   );
 }
@@ -541,9 +620,10 @@ interface SortableNoteCardProps {
   index: number;
   masonry?: boolean;
   onEdit?: (note: Note) => void;
+  onDelete?: (note: Note) => void;
 }
 
-function SortableNoteCard({ note, index, masonry = false, onEdit }: SortableNoteCardProps) {
+function SortableNoteCard({ note, index, masonry = false, onEdit, onDelete }: SortableNoteCardProps) {
   const {
     attributes,
     listeners,
@@ -566,6 +646,7 @@ function SortableNoteCard({ note, index, masonry = false, onEdit }: SortableNote
         index={index} 
         masonry={masonry} 
         onEdit={onEdit}
+        onDelete={onDelete}
         isDragging={isDragging}
       />
     </div>
@@ -578,11 +659,25 @@ interface NoteCardProps {
   index: number;
   masonry?: boolean;
   onEdit?: (note: Note) => void;
+  onDelete?: (note: Note) => void;
   isDragging?: boolean;
 }
 
-function NoteCard({ note, index, masonry = false, onEdit, isDragging = false }: NoteCardProps) {
+function NoteCard({ note, index, masonry = false, onEdit, onDelete, isDragging = false }: NoteCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
+  // Cerrar menú cuando se hace click fuera
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (showMenu) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showMenu]);
 
   const handleClick = () => {
     // No abrir modal si estamos arrastrando
@@ -714,9 +809,54 @@ function NoteCard({ note, index, masonry = false, onEdit, isDragging = false }: 
                   <Archive className="w-4 h-4 text-gray-600" />
                 </button>
               </div>
-              <button className="p-1.5 hover:bg-black/10 rounded transition-colors">
-                <MoreVertical className="w-4 h-4 text-gray-600" />
-              </button>
+              <div className="relative">
+                <button 
+                  className="p-1.5 hover:bg-black/10 rounded transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(!showMenu);
+                  }}
+                >
+                  <MoreVertical className="w-4 h-4 text-gray-600" />
+                </button>
+                
+                {/* Dropdown menu */}
+                <AnimatePresence>
+                  {showMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                      className={`
+                        absolute bottom-full right-0 mb-1 w-36
+                        ${THEME_COLORS.dashboard.card.background}
+                        ${THEME_COLORS.dashboard.card.border} border
+                        rounded-lg shadow-lg z-50
+                      `}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          if (onDelete) {
+                            onDelete(note);
+                          }
+                        }}
+                        className={`
+                          w-full px-3 py-2 text-left text-sm
+                          hover:bg-red-50 dark:hover:bg-red-900/20
+                          text-red-600 hover:text-red-700
+                          flex items-center space-x-2
+                          rounded-lg transition-colors
+                        `}
+                      >
+                        <Trash2 size={14} />
+                        <span>Eliminar</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

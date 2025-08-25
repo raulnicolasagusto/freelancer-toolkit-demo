@@ -17,7 +17,8 @@ export const es = {
       snippets: "Mis Snippets",
       notes: "Mis Notas", 
       productivity: "Productividad",
-      resources: "Recursos"
+      resources: "Recursos",
+      trash: "Papelera de reciclaje"
     },
     
     // Usuario
@@ -115,6 +116,50 @@ export const es = {
     actions: {
       edit: "Editar snippet",
       delete: "Eliminar snippet"
+    }
+  },
+
+  // === TRASH/PAPELERA ===
+  trash: {
+    pageTitle: "Papelera de reciclaje",
+    subtitle: "Elementos eliminados hace menos de 30 días",
+    emptyState: {
+      title: "La papelera está vacía",
+      description: "Los elementos eliminados aparecerán aquí y se eliminarán automáticamente después de 30 días"
+    },
+    actions: {
+      restore: "Restaurar",
+      deleteForever: "Eliminar para siempre",
+      emptyTrash: "Vaciar papelera"
+    },
+    confirmDelete: {
+      title: "Confirmar eliminación",
+      message: "¿Estás seguro que deseas eliminar permanentemente {itemType}?",
+      itemWillBeDeleted: "Este elemento se eliminará para siempre y no se podrá recuperar.",
+      warningAutoDelete: "Se eliminará automáticamente en {days} días",
+      actions: {
+        cancel: "Cancelar",
+        deleteForever: "Eliminar para siempre",
+        moveToTrash: "Mover a papelera"
+      }
+    },
+    deleteOptions: {
+      title: "¿Cómo deseas eliminar esta nota?",
+      description: "Elige una opción para continuar",
+      softDelete: {
+        title: "Mover a papelera",
+        description: "La nota se moverá a la papelera por 30 días, luego se eliminará automáticamente"
+      },
+      hardDelete: {
+        title: "Eliminar para siempre",
+        description: "La nota se eliminará permanentemente y no se podrá recuperar"
+      }
+    },
+    itemTypes: {
+      note: "nota",
+      notes: "notas",
+      snippet: "snippet",
+      snippets: "snippets"
     }
   },
 

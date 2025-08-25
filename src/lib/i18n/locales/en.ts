@@ -19,7 +19,8 @@ export const en: Translations = {
       snippets: "My Snippets",
       notes: "My Notes", 
       productivity: "Productivity",
-      resources: "Resources"
+      resources: "Resources",
+      trash: "Recycle Bin"
     },
     
     // User
@@ -108,6 +109,50 @@ export const en: Translations = {
     completed: "completed"
   },
 
+  // === TRASH/RECYCLE BIN ===
+  trash: {
+    pageTitle: "Recycle Bin",
+    subtitle: "Items deleted less than 30 days ago",
+    emptyState: {
+      title: "Recycle bin is empty",
+      description: "Deleted items will appear here and will be automatically deleted after 30 days"
+    },
+    actions: {
+      restore: "Restore",
+      deleteForever: "Delete forever",
+      emptyTrash: "Empty trash"
+    },
+    confirmDelete: {
+      title: "Confirm deletion",
+      message: "Are you sure you want to permanently delete {itemType}?",
+      itemWillBeDeleted: "This item will be deleted forever and cannot be recovered.",
+      warningAutoDelete: "Will be automatically deleted in {days} days",
+      actions: {
+        cancel: "Cancel",
+        deleteForever: "Delete forever",
+        moveToTrash: "Move to trash"
+      }
+    },
+    deleteOptions: {
+      title: "How do you want to delete this note?",
+      description: "Choose an option to continue",
+      softDelete: {
+        title: "Move to trash",
+        description: "The note will be moved to trash for 30 days, then automatically deleted"
+      },
+      hardDelete: {
+        title: "Delete forever",
+        description: "The note will be permanently deleted and cannot be recovered"
+      }
+    },
+    itemTypes: {
+      note: "note",
+      notes: "notes",
+      snippet: "snippet",
+      snippets: "snippets"
+    }
+  },
+
   // === SNIPPETS PAGE ===
   snippets: {
     pageTitle: "My Snippets",
@@ -117,6 +162,23 @@ export const en: Translations = {
     actions: {
       edit: "Edit snippet",
       delete: "Delete snippet"
+    }
+  },
+
+  // === TOP BAR NAVIGATION ===
+  topBar: {
+    search: {
+      placeholder: "Search here...",
+      noResults: "No results found",
+      searching: "Searching..."
+    },
+    breadcrumbs: {
+      home: "Home"
+    },
+    actions: {
+      notifications: "Notifications",
+      settings: "Settings", 
+      profile: "User profile"
     }
   }
 };

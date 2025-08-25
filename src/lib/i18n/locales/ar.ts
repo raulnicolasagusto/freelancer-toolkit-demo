@@ -19,7 +19,8 @@ export const ar: Translations = {
       snippets: "مقاطع الكود",
       notes: "ملاحظاتي", 
       productivity: "الإنتاجية",
-      resources: "الموارد"
+      resources: "الموارد",
+      trash: "سلة المحذوفات"
     },
     
     // المستخدم
@@ -106,5 +107,78 @@ export const ar: Translations = {
   numbers: {
     categories: "فئات",
     completed: "مكتملة"
+  },
+
+  // === صفحة مقاطع الكود ===
+  snippets: {
+    pageTitle: "مقاطع الكود",
+    addButton: "إضافة",
+    emptyState: "لا توجد مقاطع كود محفوظة بعد",
+    dragToMoveText: "اسحب إلى مجلد لنقله",
+    actions: {
+      edit: "تعديل مقطع الكود",
+      delete: "حذف مقطع الكود"
+    }
+  },
+
+  // === TRASH/سلة المحذوفات ===
+  trash: {
+    pageTitle: "سلة المحذوفات",
+    subtitle: "عناصر محذوفة منذ أقل من 30 يومًا",
+    emptyState: {
+      title: "سلة المحذوفات فارغة",
+      description: "ستظهر العناصر المحذوفة هنا وسيتم حذفها تلقائيًا بعد 30 يومًا"
+    },
+    actions: {
+      restore: "استعادة",
+      deleteForever: "حذف نهائي",
+      emptyTrash: "إفراغ سلة المحذوفات"
+    },
+    confirmDelete: {
+      title: "تأكيد الحذف",
+      message: "هل أنت متأكد من رغبتك في حذف {itemType} نهائيًا؟",
+      itemWillBeDeleted: "سيتم حذف هذا العنصر نهائيًا ولن يمكن استعادته.",
+      warningAutoDelete: "سيتم حذفه تلقائيًا في {days} أيام",
+      actions: {
+        cancel: "إلغاء",
+        deleteForever: "حذف نهائي",
+        moveToTrash: "نقل إلى سلة المحذوفات"
+      }
+    },
+    deleteOptions: {
+      title: "كيف تريد حذف هذه الملاحظة؟",
+      description: "اختر خيارًا للمتابعة",
+      softDelete: {
+        title: "نقل إلى سلة المحذوفات",
+        description: "سيتم نقل الملاحظة إلى سلة المحذوفات لمدة 30 يومًا، ثم سيتم حذفها تلقائيًا"
+      },
+      hardDelete: {
+        title: "حذف نهائي",
+        description: "سيتم حذف الملاحظة نهائيًا ولن يمكن استعادتها"
+      }
+    },
+    itemTypes: {
+      note: "ملاحظة",
+      notes: "ملاحظات",
+      snippet: "مقطع كود",
+      snippets: "مقاطع الكود"
+    }
+  },
+
+  // === شريط التنقل العلوي ===
+  topBar: {
+    search: {
+      placeholder: "ابحث هنا...",
+      noResults: "لا توجد نتائج",
+      searching: "جاري البحث..."
+    },
+    breadcrumbs: {
+      home: "الرئيسية"
+    },
+    actions: {
+      notifications: "الإشعارات",
+      settings: "الإعدادات",
+      profile: "ملف المستخدم"
+    }
   }
 };

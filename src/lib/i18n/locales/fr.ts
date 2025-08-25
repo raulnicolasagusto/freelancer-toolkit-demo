@@ -19,7 +19,8 @@ export const fr: Translations = {
       snippets: "Mes Snippets",
       notes: "Mes Notes", 
       productivity: "Productivité",
-      resources: "Ressources"
+      resources: "Ressources",
+      trash: "Corbeille"
     },
     
     // Utilisateur
@@ -116,6 +117,67 @@ export const fr: Translations = {
     actions: {
       edit: "Modifier snippet",
       delete: "Supprimer snippet"
+    }
+  },
+
+  // === TRASH/CORBEILLE ===
+  trash: {
+    pageTitle: "Corbeille",
+    subtitle: "Éléments supprimés il y a moins de 30 jours",
+    emptyState: {
+      title: "La corbeille est vide",
+      description: "Les éléments supprimés apparaîtront ici et seront automatiquement supprimés après 30 jours"
+    },
+    actions: {
+      restore: "Restaurer",
+      deleteForever: "Supprimer définitivement",
+      emptyTrash: "Vider la corbeille"
+    },
+    confirmDelete: {
+      title: "Confirmer la suppression",
+      message: "Êtes-vous sûr de vouloir supprimer définitivement {itemType}?",
+      itemWillBeDeleted: "Cet élément sera supprimé définitivement et ne pourra pas être récupéré.",
+      warningAutoDelete: "Sera automatiquement supprimé dans {days} jours",
+      actions: {
+        cancel: "Annuler",
+        deleteForever: "Supprimer définitivement",
+        moveToTrash: "Déplacer vers la corbeille"
+      }
+    },
+    deleteOptions: {
+      title: "Comment voulez-vous supprimer cette note?",
+      description: "Choisissez une option pour continuer",
+      softDelete: {
+        title: "Déplacer vers la corbeille",
+        description: "La note sera déplacée vers la corbeille pendant 30 jours, puis automatiquement supprimée"
+      },
+      hardDelete: {
+        title: "Supprimer définitivement",
+        description: "La note sera définitivement supprimée et ne pourra pas être récupérée"
+      }
+    },
+    itemTypes: {
+      note: "note",
+      notes: "notes",
+      snippet: "snippet",
+      snippets: "snippets"
+    }
+  },
+
+  // === BARRE DE NAVIGATION SUPÉRIEURE ===
+  topBar: {
+    search: {
+      placeholder: "Rechercher ici...",
+      noResults: "Aucun résultat trouvé",
+      searching: "Recherche..."
+    },
+    breadcrumbs: {
+      home: "Accueil"
+    },
+    actions: {
+      notifications: "Notifications",
+      settings: "Paramètres",
+      profile: "Profil utilisateur"
     }
   }
 };

@@ -19,7 +19,8 @@ export const ru: Translations = {
       snippets: "Мои Сниппеты",
       notes: "Мои Заметки", 
       productivity: "Продуктивность",
-      resources: "Ресурсы"
+      resources: "Ресурсы",
+      trash: "Корзина"
     },
     
     // Пользователь
@@ -106,5 +107,78 @@ export const ru: Translations = {
   numbers: {
     categories: "категории",
     completed: "выполнено"
+  },
+
+  // === СТРАНИЦА СНИППЕТОВ ===
+  snippets: {
+    pageTitle: "Мои Сниппеты",
+    addButton: "Добавить",
+    emptyState: "У вас пока нет сохранённых сниппетов",
+    dragToMoveText: "Перетащите в папку для перемещения",
+    actions: {
+      edit: "Редактировать сниппет",
+      delete: "Удалить сниппет"
+    }
+  },
+
+  // === TRASH/КОРЗИНА ===
+  trash: {
+    pageTitle: "Корзина",
+    subtitle: "Элементы, удалённые менее 30 дней назад",
+    emptyState: {
+      title: "Корзина пуста",
+      description: "Удалённые элементы будут появляться здесь и автоматически удаляться через 30 дней"
+    },
+    actions: {
+      restore: "Восстановить",
+      deleteForever: "Удалить навсегда",
+      emptyTrash: "Очистить корзину"
+    },
+    confirmDelete: {
+      title: "Подтвердить удаление",
+      message: "Вы уверены, что хотите навсегда удалить {itemType}?",
+      itemWillBeDeleted: "Этот элемент будет удалён навсегда и его нельзя будет восстановить.",
+      warningAutoDelete: "Будет автоматически удалён через {days} дней",
+      actions: {
+        cancel: "Отменить",
+        deleteForever: "Удалить навсегда",
+        moveToTrash: "Переместить в корзину"
+      }
+    },
+    deleteOptions: {
+      title: "Как вы хотите удалить эту заметку?",
+      description: "Выберите опцию для продолжения",
+      softDelete: {
+        title: "Переместить в корзину",
+        description: "Заметка будет перемещена в корзину на 30 дней, затем автоматически удалена"
+      },
+      hardDelete: {
+        title: "Удалить навсегда",
+        description: "Заметка будет навсегда удалена и её нельзя будет восстановить"
+      }
+    },
+    itemTypes: {
+      note: "заметку",
+      notes: "заметки",
+      snippet: "сниппет",
+      snippets: "сниппеты"
+    }
+  },
+
+  // === ВЕРХНЯЯ НАВИГАЦИОННАЯ ПАНЕЛЬ ===
+  topBar: {
+    search: {
+      placeholder: "Поиск здесь...",
+      noResults: "Результаты не найдены",
+      searching: "Поиск..."
+    },
+    breadcrumbs: {
+      home: "Главная"
+    },
+    actions: {
+      notifications: "Уведомления",
+      settings: "Настройки",
+      profile: "Профиль пользователя"
+    }
   }
 };

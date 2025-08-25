@@ -19,7 +19,8 @@ export const it: Translations = {
       snippets: "I Miei Snippet",
       notes: "Le Mie Note", 
       productivity: "Produttività",
-      resources: "Risorse"
+      resources: "Risorse",
+      trash: "Cestino"
     },
     
     // Utente
@@ -106,5 +107,78 @@ export const it: Translations = {
   numbers: {
     categories: "categorie",
     completed: "completate"
+  },
+
+  // === SNIPPETS PAGE ===
+  snippets: {
+    pageTitle: "I Miei Snippet",
+    addButton: "Aggiungi",
+    emptyState: "Non hai ancora snippet salvati",
+    dragToMoveText: "Trascina in una cartella per spostarlo",
+    actions: {
+      edit: "Modifica snippet",
+      delete: "Elimina snippet"
+    }
+  },
+
+  // === TRASH/CESTINO ===
+  trash: {
+    pageTitle: "Cestino",
+    subtitle: "Elementi eliminati da meno di 30 giorni",
+    emptyState: {
+      title: "Il cestino è vuoto",
+      description: "Gli elementi eliminati appariranno qui e saranno automaticamente eliminati dopo 30 giorni"
+    },
+    actions: {
+      restore: "Ripristina",
+      deleteForever: "Elimina per sempre",
+      emptyTrash: "Svuota cestino"
+    },
+    confirmDelete: {
+      title: "Conferma eliminazione",
+      message: "Sei sicuro di voler eliminare permanentemente {itemType}?",
+      itemWillBeDeleted: "Questo elemento sarà eliminato per sempre e non potrà essere recuperato.",
+      warningAutoDelete: "Sarà automaticamente eliminato in {days} giorni",
+      actions: {
+        cancel: "Annulla",
+        deleteForever: "Elimina per sempre",
+        moveToTrash: "Sposta nel cestino"
+      }
+    },
+    deleteOptions: {
+      title: "Come vuoi eliminare questa nota?",
+      description: "Scegli un'opzione per continuare",
+      softDelete: {
+        title: "Sposta nel cestino",
+        description: "La nota sarà spostata nel cestino per 30 giorni, poi sarà automaticamente eliminata"
+      },
+      hardDelete: {
+        title: "Elimina per sempre",
+        description: "La nota sarà permanentemente eliminata e non potrà essere recuperata"
+      }
+    },
+    itemTypes: {
+      note: "nota",
+      notes: "note",
+      snippet: "snippet",
+      snippets: "snippets"
+    }
+  },
+
+  // === BARRA DI NAVIGAZIONE SUPERIORE ===
+  topBar: {
+    search: {
+      placeholder: "Cerca qui...",
+      noResults: "Nessun risultato trovato",
+      searching: "Ricerca in corso..."
+    },
+    breadcrumbs: {
+      home: "Home"
+    },
+    actions: {
+      notifications: "Notifiche",
+      settings: "Impostazioni",
+      profile: "Profilo utente"
+    }
   }
 };
