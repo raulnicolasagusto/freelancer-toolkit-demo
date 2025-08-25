@@ -191,13 +191,11 @@ export async function getNotes(folderId?: string | null, clerkUserId?: string, u
 
     console.log('User data for notes:', userData);
 
-    // Construir query para notas (excluir eliminadas, incluyendo notas sin columnas de papelera)
+    // Construir query base
     let query = supabase
       .from('notes')
       .select('*')
-      .eq('user_id', userData.id)
-      .or('is_deleted.is.null,is_deleted.eq.false') // Solo notas no eliminadas o sin la columna
-      .order('updated_at', { ascending: false });
+      .eq('user_id', userData.id);
 
     if (folderId === null) {
       query = query.is('folder_id', null);
@@ -205,15 +203,52 @@ export async function getNotes(folderId?: string | null, clerkUserId?: string, u
       query = query.eq('folder_id', folderId);
     }
 
-    const { data, error } = await query;
+    // Intentar con filtro de papelera primero
+    try {
+      const { data, error } = await query
+        .or('is_deleted.is.null,is_deleted.eq.false')
+        .order('updated_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching notes:', error);
-      return [];
+      if (error && (error.message?.includes('is_deleted') || error.message?.includes('deleted_at'))) {
+        // Las columnas no existen, intentar sin filtro
+        console.log('Trash columns not found, loading all notes without filter');
+        const { data: fallbackData, error: fallbackError } = await query
+          .order('updated_at', { ascending: false });
+        
+        if (fallbackError) {
+          console.error('Error fetching notes (fallback):', fallbackError);
+          return [];
+        }
+        
+        console.log('Notes loaded (fallback):', fallbackData);
+        return fallbackData || [];
+      }
+
+      if (error) {
+        console.error('Error fetching notes:', error);
+        return [];
+      }
+
+      console.log('Notes loaded:', data);
+      return data || [];
+    } catch (error: any) {
+      // Fallback: intentar sin filtro de papelera
+      console.log('Fallback: loading notes without trash filter');
+      try {
+        const { data, error: fallbackError } = await query
+          .order('updated_at', { ascending: false });
+        
+        if (fallbackError) {
+          console.error('Error fetching notes (fallback):', fallbackError);
+          return [];
+        }
+        
+        return data || [];
+      } catch {
+        console.error('Error in getNotes fallback:', error);
+        return [];
+      }
     }
-
-    console.log('Notes loaded:', data);
-    return data || [];
   } catch (error) {
     console.error('Error in getNotes:', error);
     return [];
